@@ -4,6 +4,8 @@
 #include <QMimeData>
 #include <QtGui>
 #include <QList>
+#include <QFile>
+#include <QFileInfo>
 
 DocReadWriter::DocReadWriter(QObject *parent) :
     QObject(parent)
@@ -17,7 +19,7 @@ DocReadWriter::DocReadWriter(QObject *parent, QString sourceFile, QString Destin
 }
 
 
-bool DocReadWriter::converse()
+bool DocReadWriter::convert()
 {
     QClipboard *clip = QApplication::clipboard();   //获取系统粘贴板
     inputFileName.replace("/","\\");        //获取Windows下的正确路径名
@@ -71,17 +73,11 @@ bool DocReadWriter::converse()
 
     if (dat->hasHtml()) {
         questionHTML = dat->html();
-        QFile out("ques.txt");
-        out.open(QIODevice::WriteOnly);
-        QTextStream outs(&out);
-        outs << tr("\n问题如下\n");
-        outs << questionHTML;
-        out.close();
+        parserImage(questionHTML, "Question");
     }
 
-    Questdoc->dynamicCall("SaveAs(const QString&)",QString("%1_%2_%3%4.doc").arg("outPath").arg("quesType").arg("Q").arg("1"));
+    Questdoc->dynamicCall("SaveAs(const QString&)",QString("%1/%2_%3%4.doc").arg(outPath).arg("quesType").arg("Q").arg("1"));
     Questdoc->dynamicCall("Close(boolean)", true);
-
 
     //获取“知识点”书签
     QAxObject *pointBookmarks  = inputFile->querySubObject("Bookmarks(QVariant)",QObject::tr("知识点"));
@@ -114,64 +110,10 @@ bool DocReadWriter::converse()
     if (dat->hasHtml()) {
         answerHTML = dat->html();
 
-        QFile out("answeold.txt");
-        out.open(QIODevice::WriteOnly);
-        QTextStream outs(&out);
-        outs << tr("\n答案如下\n");
-        outs << answerHTML;
-        out.close();
-
-        QList<int> start;
-        QList<int> end;
-
-        int startidx = 0;
-        int endidx = 0;
-
-        while((startidx = answerHTML.indexOf("<!--[if gte vml 1]>",startidx)) != -1){
-            start.prepend(startidx);
-            startidx ++;
-            if((endidx = answerHTML.indexOf("<![endif]-->", startidx)) != -1){
-                end.prepend(endidx);
-            }
-        }
-
-        for (int i = 0; i < start.length(); ++i) {
-            answerHTML.remove(start.at(i), end.at(i)-start.at(i)+12);
-        }
-
-        start.clear();
-        end.clear();
-
-        startidx = 0;
-        endidx = 0;
-
-        while((startidx = answerHTML.indexOf("<![if !vml]>", startidx)) != -1){
-            start.prepend(startidx);
-            startidx ++;
-            if ((endidx = answerHTML.indexOf("<![endif]>", startidx)) != -1 ) {
-                end.prepend(endidx);
-            }
-        }
-
-        for (int i = 0; i < start.length(); ++i) {
-            int imgStart = answerHTML.indexOf("<img", start.at(i));
-            int srcStart = answerHTML.indexOf("src=", imgStart);
-            int srcEnd = answerHTML.indexOf("shapes",srcStart);
-            QString imgPath = answerHTML.mid(srcStart+5,srcEnd-2);
-            qDebug() << "Image path are " << imgPath;
-        }
-
-//        qDebug() << answerHTML;
-
-        QFile out2("answe.txt");
-        out2.open(QIODevice::WriteOnly);
-        QTextStream outs2(&out);
-        outs2 << tr("\n答案如下\n");
-        outs2 << answerHTML;
-        out2.close();
+        parserImage(answerHTML, "Answer");
     }
 
-    answerdoc->dynamicCall("SaveAs(const QString&)", QString("%1_%2_%3%4.doc").arg("outPath").arg("quesType").arg("A").arg("1"));
+    answerdoc->dynamicCall("SaveAs(const QString&)", QString("%1/%2_%3%4.doc").arg(outPath).arg("quesType").arg("A").arg("1"));
     answerdoc->dynamicCall("Close(boolean)", true);
 
     //获取“难度”书签
@@ -221,4 +163,49 @@ QString DocReadWriter::getPoint()
 QString DocReadWriter::getDifficulty()
 {
     return difficulty;
+}
+
+void DocReadWriter::parserImage(QString &html, QString type)
+{
+    html.replace(QString("\\"), QString("/"));
+    html.remove("file:///");
+
+    QList<int> start;
+    QList<int> end;
+
+    int startidx = 0;
+    int endidx = 0;
+
+    while((startidx = html.indexOf("<!--[if gte vml 1]>",startidx)) != -1){
+        start.prepend(startidx);
+        startidx ++;
+        if((endidx = html.indexOf("<![endif]-->", startidx)) != -1){
+            end.prepend(endidx);
+        }
+    }
+
+    for (int i = 0; i < start.length(); ++i) {
+        html.remove(start.at(i), end.at(i)-start.at(i)+12);
+    }
+
+    start.clear();
+    startidx = 0;
+
+    while((startidx = html.indexOf("<![if !vml]>", startidx)) != -1){
+        start.prepend(startidx);
+        startidx ++;
+    }
+
+    for (int i = 0; i < start.length(); ++i) {
+        int srcStart = html.indexOf("src=\"", start.at(i))+5;
+        int srcEnd = html.indexOf("v:shapes",srcStart)-2;
+        QString imgOriginalPath = html.mid(srcStart,srcEnd-srcStart);
+
+        QFile imgfile(imgOriginalPath);
+        QFileInfo imgFileInfo(imgOriginalPath);
+        QString imgFinalPath = QString("%1/%2%3.%4").arg(outPath).arg(type).arg(i).arg(imgFileInfo.completeSuffix());
+        imgfile.copy(imgFinalPath);
+
+        html.replace(imgOriginalPath, imgFinalPath);
+    }
 }

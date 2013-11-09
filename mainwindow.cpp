@@ -13,6 +13,7 @@
 
 #include <QDebug>
 #include <QTextCodec>
+#include <QDir>
 
 #include <newsubjectform.h>
 #include <newtestform.h>
@@ -37,7 +38,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
-
     delete ui;
 }
 
@@ -59,14 +59,21 @@ void MainWindow::on_pushButton_clicked()
     }
     word->setProperty("Visible", true);
 
-    DocReadWriter *docRDWR = new DocReadWriter(this, fileName, "");
+    QDir dir(".");
+    dir.mkdir("C:/out/new");
+
+
+    DocReadWriter *docRDWR = new DocReadWriter(this, fileName, "C:/out/new");
 
     QAxObject *docs = word->querySubObject("Documents");
 
     docRDWR->setDocuemnt(docs);
 
     ui->statusBar->setStatusTip(tr("正在处理,请稍侯"));
-    docRDWR->converse();
+    if(!docRDWR->convert()){
+        QMessageBox::warning(this, tr("错误"), tr("文件信息提取错误！"), QMessageBox::Ok);
+        return ;
+    }
     ui->statusBar->setStatusTip(tr("处理完成"));
 
     QString Question = docRDWR->getQuestion();

@@ -32,9 +32,11 @@ public:
         quesType = type;
     }
 
-    bool converse();
+    bool convert();
     QString getQuestion();
+    QString getQuestionDocPath();
     QString getAnswer();
+    QString getAnswerDocPath();
     QString getPoint();
     QString getDifficulty();
 
@@ -43,13 +45,16 @@ signals:
 public slots:
 
 private:
+    void parserImage(QString &html, QString type);
     QAxObject *documents;
     QAxObject *selection;
     QString inputFileName;  //输入文件名
     QString outPath;        //输出目录
     QString quesType;       //题型
     QString questionHTML;   //问题
+    QString questionDocPath;
     QString answerHTML;     //答案
+    QString answerDocPath;
     QString point;          //知识点
     QString difficulty;     //难度 （1～ 10）
 };
