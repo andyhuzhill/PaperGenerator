@@ -1,0 +1,12 @@
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+CREATE TABLE Questions(id, Point, Difficulty, questype, blob);
+INSERT INTO "Questions" VALUES(1,'基尔霍夫定律',2,'解答题','aadfafdadf');
+CREATE TABLE subject(id integer primary key autoincrement, name, questype, grade);
+INSERT INTO "subject" VALUES(0,'电路原理','选择题,填空题,简答题,计算题',100);
+INSERT INTO "subject" VALUES(1,'单片机原理与应用','选择题,填空题,简答题,编程题',100);
+INSERT INTO "subject" VALUES(2,'模拟电子技术','选择题,填空题,简答题,计算题',100);
+INSERT INTO "subject" VALUES(3,'数字电子技术','选择题,填空题,简答题,计算题',100);
+DELETE FROM sqlite_sequence;
+INSERT INTO "sqlite_sequence" VALUES('subject',3);
+COMMIT;
