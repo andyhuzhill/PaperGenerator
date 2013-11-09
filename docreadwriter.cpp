@@ -4,8 +4,8 @@
 #include <QMimeData>
 #include <QtGui>
 #include <QList>
+#include <QDir>
 #include <QFile>
-#include <QFileInfo>
 
 DocReadWriter::DocReadWriter(QObject *parent) :
     QObject(parent)
@@ -15,6 +15,8 @@ DocReadWriter::DocReadWriter(QObject *parent) :
 DocReadWriter::DocReadWriter(QObject *parent, QString sourceFile, QString DestinationPath)
 {
     inputFileName = sourceFile;
+    QFileInfo srcFileInfo(inputFileName);
+    inputFileBaseName = srcFileInfo.baseName();
     outPath = DestinationPath;
 }
 
@@ -23,6 +25,9 @@ bool DocReadWriter::convert()
 {
     QClipboard *clip = QApplication::clipboard();   //获取系统粘贴板
     inputFileName.replace("/","\\");        //获取Windows下的正确路径名
+
+    QDir dstDir(outPath);
+    dstDir.mkdir(inputFileBaseName);
 
     //打开输入文件
     QAxObject *inputFile = documents->querySubObject("Open(QString)", inputFileName);
@@ -76,7 +81,8 @@ bool DocReadWriter::convert()
         parserImage(questionHTML, "Question");
     }
 
-    Questdoc->dynamicCall("SaveAs(const QString&)",QString("%1/%2_%3%4.doc").arg(outPath).arg("quesType").arg("Q").arg("1"));
+
+    Questdoc->dynamicCall("SaveAs(const QString&)",QString("%1/%2/%3.doc").arg(outPath).arg(inputFileBaseName).arg("Question"));
     Questdoc->dynamicCall("Close(boolean)", true);
 
     //获取“知识点”书签
@@ -113,7 +119,7 @@ bool DocReadWriter::convert()
         parserImage(answerHTML, "Answer");
     }
 
-    answerdoc->dynamicCall("SaveAs(const QString&)", QString("%1/%2_%3%4.doc").arg(outPath).arg("quesType").arg("A").arg("1"));
+    answerdoc->dynamicCall("SaveAs(const QString&)", QString("%1/%2/%3.doc").arg(outPath).arg(inputFileBaseName).arg("Answer"));
     answerdoc->dynamicCall("Close(boolean)", true);
 
     //获取“难度”书签
@@ -203,7 +209,7 @@ void DocReadWriter::parserImage(QString &html, QString type)
 
         QFile imgfile(imgOriginalPath);
         QFileInfo imgFileInfo(imgOriginalPath);
-        QString imgFinalPath = QString("%1/%2%3.%4").arg(outPath).arg(type).arg(i).arg(imgFileInfo.completeSuffix());
+        QString imgFinalPath = QString("%1/%2/%3%4.%5").arg(outPath).arg(inputFileBaseName).arg(type).arg(i).arg(imgFileInfo.completeSuffix());
         imgfile.copy(imgFinalPath);
 
         html.replace(imgOriginalPath, imgFinalPath);

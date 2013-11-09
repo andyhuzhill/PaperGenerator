@@ -15,10 +15,10 @@ newTestForm::newTestForm(QWidget *parent) :
 
     QSqlQuery query;
 
-    query.exec("SELECT * FROM subject");
+    query.exec("SELECT * FROM subjects");
 
     while (query.next()) {
-        ui->SubjectNameCB->addItem(query.value(query.record().indexOf("name")).toString());
+        ui->SubjectNameCB->addItem(query.value(query.record().indexOf("subjectName")).toString());
     }
 
 }

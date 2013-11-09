@@ -49,7 +49,6 @@ void MainWindow::on_pushButton_clicked()
         QMessageBox::warning(this, tr("警告"), tr("没有提供文件名"), QMessageBox::Ok);
         return ;
     }
-    qDebug() << "fileName = " << fileName;
 
     word = new QAxWidget("Word.Application");
 
@@ -58,10 +57,6 @@ void MainWindow::on_pushButton_clicked()
         qApp->quit();
     }
     word->setProperty("Visible", true);
-
-    QDir dir(".");
-    dir.mkdir("C:/out/new");
-
 
     DocReadWriter *docRDWR = new DocReadWriter(this, fileName, "C:/out/new");
 
@@ -139,7 +134,7 @@ void MainWindow::createActions()
 
     quitAction = new QAction(QIcon(":/images/quit.png"), tr("退出系统"), this);
     quitAction->setShortcut(tr("Ctrl+Q"));
-    connect(quitAction, SIGNAL(triggered()), this, SLOT(close()));
+    connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
 
     aboutAction = new QAction(tr("关于本程序"), this);
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));

@@ -6,6 +6,7 @@
 #include <ActiveQt/QAxWidget>
 #include <QString>
 #include <iostream>
+#include <QFileInfo>
 
 class DocReadWriter : public QObject
 {
@@ -17,6 +18,8 @@ public:
 
     void setSourceDest(QString sourceFile, QString destPath){
         inputFileName = sourceFile;
+        QFileInfo srcFileInfo(inputFileName);
+        inputFileBaseName = srcFileInfo.baseName();
         outPath = destPath;
     }
 
@@ -29,7 +32,7 @@ public:
     }
 
     void setQuestionType(QString type){
-        quesType = type;
+        questionType = type;
     }
 
     bool convert();
@@ -49,8 +52,9 @@ private:
     QAxObject *documents;
     QAxObject *selection;
     QString inputFileName;  //输入文件名
+    QString inputFileBaseName;
     QString outPath;        //输出目录
-    QString quesType;       //题型
+    QString questionType;   //题型
     QString questionHTML;   //问题
     QString questionDocPath;
     QString answerHTML;     //答案
