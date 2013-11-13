@@ -4,6 +4,8 @@
 #include <QMessageBox>
 #include <QCryptographicHash>   //加密函数库
 
+#include "firstsettingsdialog.h"
+
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::LoginDialog)
@@ -29,7 +31,7 @@ LoginDialog::~LoginDialog()
 void LoginDialog::on_quitButton_clicked()
 {
     //拒绝登陆
-    this->reject();
+    reject();
 }
 
 void LoginDialog::on_loginButton_clicked()
@@ -45,7 +47,7 @@ void LoginDialog::on_loginButton_clicked()
     for (int i = 0; i < size; ++i) {
         if (username == Logins.at(i).name &&
                 pwd2md5 == Logins.at(i).passwd) {
-            this->accept();
+            accept();
             return ;
         }
     }
@@ -54,7 +56,6 @@ void LoginDialog::on_loginButton_clicked()
     ui->passEdit->clear();
     ui->nameEdit->clear();
     ui->nameEdit->setFocus(); //将密码框和用户名框清空 并设置用户名框为焦点
-
 }
 
 void LoginDialog::readSettings()
@@ -64,8 +65,10 @@ void LoginDialog::readSettings()
     int size = settings->beginReadArray("logins");
     if (size == 0) {
         initUserPass();
-        return ;
+        size ++;
     }
+
+    Logins.clear();
 
     for (int i = 0; i < size; ++i) {
         settings->setArrayIndex(i);
@@ -76,32 +79,13 @@ void LoginDialog::readSettings()
     }
 
     settings->endArray();
-
 }
 
 void LoginDialog::initUserPass()
 {
-    Login log;
-    log.name = "admin";
-    log.passwd = "pass";
-    Logins.append(log);
+    FirstSettingsDialog firstDialog;
 
-    settings = new QSettings(OrgName, AppName);
-    int size = Logins.size();
-
-    settings->beginWriteArray("logins");
-    for (int i = 0; i < size; ++i) {
-        settings->setArrayIndex(i);
-
-        QString username = Logins.at(i).name;
-        QString password = Logins.at(i).passwd;
-
-        QByteArray bp = QCryptographicHash::hash(password.toAscii(), QCryptographicHash::Md5);
-        QString pwd2md5 = bp.toHex();
-
-        settings->setValue("name", username);
-        settings->setValue("pass", pwd2md5);
+    if (firstDialog.exec() != QDialog::Accepted) {
+        reject();
     }
-    settings->endArray();
-
 }

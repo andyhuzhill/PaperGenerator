@@ -5,6 +5,7 @@
 
 #include <QList>
 #include <QListWidgetItem>
+#include "defs.h"
 
 class QSettings;
 
@@ -13,8 +14,6 @@ struct Login{
     QString passwd;
 };
 
-const QString OrgName = "www.csust.edu.cn";
-const QString AppName = "TestPaperGenerator";
 
 namespace Ui {
 class manageUserForm;

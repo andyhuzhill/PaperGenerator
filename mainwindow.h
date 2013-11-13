@@ -55,6 +55,7 @@ private:
     manageUserForm  *userForm;
 
     QAxWidget *word;
+    QString paperPath;
 };
 
 #endif // MAINWINDOW_H

@@ -19,20 +19,24 @@ SOURCES += main.cpp\
     newtestform.cpp \
     newsubjectform.cpp \
     manageuserform.cpp \
-    docreadwriter.cpp
+    docreadwriter.cpp \
+    firstsettingsdialog.cpp
 
 HEADERS  += mainwindow.h \
     logindialog.h \
     newtestform.h \
     newsubjectform.h \
     manageuserform.h \
-    docreadwriter.h
+    docreadwriter.h \
+    firstsettingsdialog.h \
+    defs.h
 
 FORMS    += mainwindow.ui \
     logindialog.ui \
     newtestform.ui \
     newsubjectform.ui \
-    manageuserform.ui
+    manageuserform.ui \
+    firstsettingsdialog.ui
 
 OTHER_FILES += \
     ReadMe.txt \

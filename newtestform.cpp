@@ -37,16 +37,12 @@ void newTestForm::on_SubjectNameCB_currentIndexChanged(const QString &arg1)
 {
     QSqlQuery query;
 
-    query.exec(QString("SELECT questype FROM subject WHERE name = '%1'").arg(arg1));
+    query.exec(QString("SELECT questionTypes FROM '%1'").arg(arg1));
 
-    qDebug() << QString(tr("SELECT questype FROM subject WHERE name = %1")).arg(arg1);
-
+    ui->listWidget->clear();
+    ui->questionTypeCB->clear();
     while (query.next()) {
-        QStringList list = query.value(0).toString().split(",", QString::SkipEmptyParts);
-        ui->listWidget->clear();
-        foreach (QString str, list) {
-            ui->listWidget->addItem(str);
-        }
-
+        ui->listWidget->addItem(query.value(0).toString());
+        ui->questionTypeCB->addItem(query.value(0).toString());
     }
 }

@@ -5,15 +5,12 @@
 #include <QList>
 #include <QSettings>
 
+#include "defs.h"
 
 struct Login{
     QString name;
     QString passwd;
 };
-
-
-const QString OrgName = "www.csust.edu.cn";
-const QString AppName = "TestPaperGenerator";
 
 namespace Ui {
 class LoginDialog;

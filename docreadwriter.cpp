@@ -6,6 +6,7 @@
 #include <QList>
 #include <QDir>
 #include <QFile>
+#include <QTextStream>
 
 DocReadWriter::DocReadWriter(QObject *parent) :
     QObject(parent)
@@ -81,8 +82,9 @@ bool DocReadWriter::convert()
         parserImage(questionHTML, "Question");
     }
 
+    questionDocPath = QString("%1/%2/%3.doc").arg(outPath).arg(inputFileBaseName).arg("Question");
 
-    Questdoc->dynamicCall("SaveAs(const QString&)",QString("%1/%2/%3.doc").arg(outPath).arg(inputFileBaseName).arg("Question"));
+    Questdoc->dynamicCall("SaveAs(const QString&)", questionDocPath);
     Questdoc->dynamicCall("Close(boolean)", true);
 
     //获取“知识点”书签
@@ -115,11 +117,11 @@ bool DocReadWriter::convert()
     dat = clip->mimeData();
     if (dat->hasHtml()) {
         answerHTML = dat->html();
-
         parserImage(answerHTML, "Answer");
     }
+    answerDocPath = QString("%1/%2/%3.doc").arg(outPath).arg(inputFileBaseName).arg("Answer");
 
-    answerdoc->dynamicCall("SaveAs(const QString&)", QString("%1/%2/%3.doc").arg(outPath).arg(inputFileBaseName).arg("Answer"));
+    answerdoc->dynamicCall("SaveAs(const QString&)", answerDocPath);
     answerdoc->dynamicCall("Close(boolean)", true);
 
     //获取“难度”书签
@@ -127,6 +129,7 @@ bool DocReadWriter::convert()
     if (!difficultyBookemarks) {
         return false;
     }
+
     int difficultyBookemarksStart = difficultyBookemarks->querySubObject("Range")->property("Start").toInt();
 
     docRange->dynamicCall("setRange(QVariant, QVariant)", pointBookmarksStart, difficultyBookemarksStart);
@@ -156,9 +159,19 @@ QString DocReadWriter::getQuestion()
     return questionHTML;
 }
 
+QString DocReadWriter::getQuestionDocPath()
+{
+    return questionDocPath;
+}
+
 QString DocReadWriter::getAnswer()
 {
     return answerHTML;
+}
+
+QString DocReadWriter::getAnswerDocPath()
+{
+    return answerDocPath;
 }
 
 QString DocReadWriter::getPoint()

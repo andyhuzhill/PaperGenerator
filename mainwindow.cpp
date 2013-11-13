@@ -14,6 +14,8 @@
 #include <QDebug>
 #include <QTextCodec>
 #include <QDir>
+#include <QSettings>
+#include "defs.h"
 
 #include <newsubjectform.h>
 #include <newtestform.h>
@@ -34,6 +36,10 @@ MainWindow::MainWindow(QWidget *parent) :
     createActions();
     createMenus();
     createToolBars();
+
+    QSettings settings(OrgName, AppName);
+
+    paperPath = settings.value("paperPath").toString();
 }
 
 MainWindow::~MainWindow()
@@ -54,11 +60,11 @@ void MainWindow::on_pushButton_clicked()
 
     if (!word) {
         QMessageBox::warning(this, tr("错误"),tr("无法找到Word程序，请安装！"),QMessageBox::Ok);
-        qApp->quit();
+        return;
     }
     word->setProperty("Visible", true);
 
-    DocReadWriter *docRDWR = new DocReadWriter(this, fileName, "C:/out/new");
+    DocReadWriter *docRDWR = new DocReadWriter(this, fileName, paperPath);
 
     QAxObject *docs = word->querySubObject("Documents");
 
@@ -81,7 +87,7 @@ void MainWindow::on_pushButton_clicked()
 
     delete docRDWR;
 
-    word->dynamicCall("Quit()");
+    word->dynamicCall("Quit(boolean)", true);
 
     delete word;
 }
@@ -110,10 +116,10 @@ void MainWindow::manageUser()
 void MainWindow::about()
 {
     QMessageBox::about(this, tr("试卷自动生成系统"),
-                       tr("<h1> 试卷自动生成系统 </h1><br>"
-                          " <br>"
-                          ""
-                          "")
+                       tr("<h1> 题库管理与试卷自动生成系统 </h1><br>"
+                          " 作者： Andy Scout <br>"
+                          " 联系方式： andyhuzhill@gmail.com <br>"
+                          "个人主页： <a href=\"http://andyhuzhill.github.io\">http://andyhuzhill.github.io</a>")
                        );
 }
 
@@ -124,8 +130,8 @@ void MainWindow::createActions()
     newTestAction->setStatusTip(tr("根据已建的试题库创建一份试卷"));
     connect(newTestAction, SIGNAL(triggered()), this, SLOT(newTest()));
 
-    manageSubjectAction = new QAction(QIcon(":/images/window-new.png"), tr("新建题库"), this);
-    manageSubjectAction->setStatusTip(tr("建立一个试题库"));
+    manageSubjectAction = new QAction(QIcon(":/images/window-new.png"), tr("管理题库"), this);
+    manageSubjectAction->setStatusTip(tr("管理试题库"));
     connect(manageSubjectAction, SIGNAL(triggered()), this, SLOT(manageSubject()));
 
     manageUserAction = new QAction(QIcon(":/images/add.png"), tr("添加用户"), this);

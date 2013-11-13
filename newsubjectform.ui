@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>653</width>
-    <height>434</height>
+    <width>759</width>
+    <height>455</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,10 +16,10 @@
   <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>40</y>
-     <width>611</width>
-     <height>361</height>
+     <x>10</x>
+     <y>10</y>
+     <width>741</width>
+     <height>431</height>
     </rect>
    </property>
    <property name="currentIndex">
@@ -29,128 +29,255 @@
     <attribute name="title">
      <string>课程信息</string>
     </attribute>
-    <widget class="QLabel" name="subjectNameLabel">
+    <widget class="QWidget" name="">
      <property name="geometry">
       <rect>
-       <x>30</x>
-       <y>50</y>
-       <width>71</width>
-       <height>17</height>
+       <x>20</x>
+       <y>20</y>
+       <width>701</width>
+       <height>29</height>
       </rect>
      </property>
-     <property name="text">
-      <string>课程名称：</string>
-     </property>
-     <property name="buddy">
-      <cstring>SubjectNameEdit</cstring>
-     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="subjectNameLabel">
+        <property name="text">
+         <string>课程名称：</string>
+        </property>
+        <property name="buddy">
+         <cstring>SubjectNameEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="SubjectNameEdit"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="newSubjectButton">
+        <property name="text">
+         <string>新建课程</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="questionTypeLabel">
+        <property name="text">
+         <string>题型名：</string>
+        </property>
+        <property name="buddy">
+         <cstring>questionTypeEdit</cstring>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="questionTypeEdit"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="newTypeButton">
+        <property name="text">
+         <string>新建题型</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
-    <widget class="QLineEdit" name="SubjectNameEdit">
+    <widget class="QWidget" name="">
      <property name="geometry">
       <rect>
-       <x>130</x>
-       <y>40</y>
-       <width>113</width>
-       <height>27</height>
+       <x>20</x>
+       <y>100</y>
+       <width>701</width>
+       <height>281</height>
       </rect>
      </property>
-    </widget>
-    <widget class="QLabel" name="questionTypesLabel">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>90</y>
-       <width>71</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>题型列表：</string>
-     </property>
-     <property name="buddy">
-      <cstring>questionTypeList</cstring>
-     </property>
-    </widget>
-    <widget class="QListWidget" name="questionTypeList">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>120</y>
-       <width>141</width>
-       <height>191</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="delTypeButton">
-     <property name="geometry">
-      <rect>
-       <x>210</x>
-       <y>260</y>
-       <width>101</width>
-       <height>27</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>删除选中题型</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="newTypeButton">
-     <property name="geometry">
-      <rect>
-       <x>210</x>
-       <y>210</y>
-       <width>101</width>
-       <height>27</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>新建题型</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="newSubjectButton">
-     <property name="geometry">
-      <rect>
-       <x>270</x>
-       <y>40</y>
-       <width>101</width>
-       <height>27</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>新建该课程</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="questionTypeEdit">
-     <property name="geometry">
-      <rect>
-       <x>210</x>
-       <y>160</y>
-       <width>113</width>
-       <height>27</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="questionTypeLabel">
-     <property name="geometry">
-      <rect>
-       <x>210</x>
-       <y>130</y>
-       <width>71</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>题型名：</string>
-     </property>
-     <property name="buddy">
-      <cstring>questionTypeEdit</cstring>
-     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="subjectsListLabel">
+        <property name="text">
+         <string>课程列表：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="questionTypesLabel">
+        <property name="text">
+         <string>题型列表：</string>
+        </property>
+        <property name="buddy">
+         <cstring>questionTypeList</cstring>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QPushButton" name="deleteSelectedSubject">
+        <property name="text">
+         <string>删除选中课程</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QPushButton" name="deleteSelectedType">
+        <property name="text">
+         <string>删除选中题型</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QListWidget" name="subjectsListsView"/>
+      </item>
+      <item row="1" column="2">
+       <widget class="QListWidget" name="questionTypeList"/>
+      </item>
+     </layout>
     </widget>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
      <string>录入试题</string>
     </attribute>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>100</y>
+       <width>651</width>
+       <height>101</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>单个录入：</string>
+     </property>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>71</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>文件名：</string>
+      </property>
+     </widget>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>591</width>
+        <height>29</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <widget class="QLineEdit" name="inputFileNameEdit"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="chooseFileName">
+         <property name="text">
+          <string>选择文件</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="startInput">
+         <property name="text">
+          <string>录入</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>220</y>
+       <width>651</width>
+       <height>161</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>批量录入：</string>
+     </property>
+     <widget class="QWidget" name="">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>30</y>
+        <width>601</width>
+        <height>121</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>该题型题目所在文件夹:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLineEdit" name="inputFilesPathEdit"/>
+       </item>
+       <item row="1" column="1">
+        <widget class="QPushButton" name="chooseInputFilePath">
+         <property name="text">
+          <string>选择题目文件夹</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QProgressBar" name="progressBar">
+         <property name="value">
+          <number>24</number>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QPushButton" name="startInputMany">
+         <property name="text">
+          <string>开始录入</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>661</width>
+       <height>29</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>课程：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="subjectsCB"/>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>题型：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="questionTypesCB"/>
+      </item>
+     </layout>
+    </widget>
    </widget>
   </widget>
  </widget>
