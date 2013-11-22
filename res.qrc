@@ -10,6 +10,7 @@
         <file>images/quit.png</file>
         <file>images/background.png</file>
         <file>images/watermark.png</file>
+        <file>images/alipay.png</file>
     </qresource>
     <qresource prefix="/lang">
         <file>qt_zh_CN.qm</file>

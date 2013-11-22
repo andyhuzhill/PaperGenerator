@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
     LoginDialog login;        //登陆窗口
     if (login.exec() == QDialog::Accepted) {
         MainWindow w;
+        w.setWindowFlags(w.windowFlags() & ~Qt::WindowMaximizeButtonHint);
         w.show();           //只有在登陆验证通过后才显示主窗口
 
         return app.exec();

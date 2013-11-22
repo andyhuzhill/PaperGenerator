@@ -165,6 +165,7 @@ void manageUserForm::on_deleteUserButton_clicked()
     }else{
         settings->remove(QString("logins/%1").arg(name));
         Logins.removeAt(i);
+        QMessageBox::information(this, tr("通知"), tr("删除成功"), QMessageBox::Ok);
         size --;
     }
 

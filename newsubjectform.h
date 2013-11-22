@@ -43,6 +43,28 @@ private slots:
 
     void on_startInputMany_clicked();
 
+    void on_subjectCB2_currentIndexChanged(const QString &arg1);
+
+    void on_quesTypeCB2_currentIndexChanged(const QString &arg1);
+
+    void on_changeButton_clicked();
+
+    void on_questNumCB_valueChanged(int arg1);
+
+    void on_deleteButton_clicked();
+
+    void questionNumRefresh();
+
+    void on_newQuestionButton_clicked();
+
+    void on_modifyQuestion_clicked();
+
+    void modifyQA(QString QorA);
+
+    void on_modifyAnswer_clicked();
+
+    void onWordQuit();
+
 private:
     Ui::newSubjectForm *ui;
 

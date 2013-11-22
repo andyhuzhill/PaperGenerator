@@ -9,11 +9,6 @@
 
 class QSettings;
 
-struct Login{
-    QString name;
-    QString passwd;
-};
-
 
 namespace Ui {
 class manageUserForm;
@@ -31,7 +26,6 @@ private slots:
     void on_exitButton_clicked();
 
     void on_addUserButton_clicked();
-
 
     void on_UserLists_itemClicked(QListWidgetItem *item);
 

@@ -7,11 +7,6 @@
 
 #include "defs.h"
 
-struct Login{
-    QString name;
-    QString passwd;
-};
-
 namespace Ui {
 class LoginDialog;
 }

@@ -13,16 +13,8 @@ DocReadWriter::DocReadWriter(QObject *parent) :
 {
 }
 
-DocReadWriter::DocReadWriter(QObject *parent, QString sourceFile, QString DestinationPath)
-{
-    inputFileName = sourceFile;
-    QFileInfo srcFileInfo(inputFileName);
-    inputFileBaseName = srcFileInfo.baseName();
-    outPath = DestinationPath;
-}
 
-
-bool DocReadWriter::convert()
+bool DocReadWriter::readAndConvert()
 {
     QClipboard *clip = QApplication::clipboard();   //获取系统粘贴板
     inputFileName.replace("/","\\");        //获取Windows下的正确路径名
@@ -47,7 +39,7 @@ bool DocReadWriter::convert()
     if (!questionBookmarks) {
         return false;
     }
-    int questionBookmarksStart = questionBookmarks->querySubObject("Range")->property("Start").toInt();
+    int questionBookmarksEnd = questionBookmarks->querySubObject("Range")->property("End").toInt();
 
     //获取“答案”书签
     QAxObject *answerBookmarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("答案"));
@@ -55,8 +47,9 @@ bool DocReadWriter::convert()
         return false;
     }
     int answerBookmarksStart = answerBookmarks->querySubObject("Range")->property("Start").toInt();
+    int answerBookmarksEnd = answerBookmarks->querySubObject("Range")->property("End").toInt();
 
-    docRange->dynamicCall("setRange(QVariant, QVariant)", questionBookmarksStart, answerBookmarksStart);
+    docRange->dynamicCall("setRange(QVariant, QVariant)", questionBookmarksEnd, answerBookmarksStart);
 
     docRange->dynamicCall("Select()");
 
@@ -94,8 +87,9 @@ bool DocReadWriter::convert()
     }
 
     int pointBookmarksStart = pointBookmarks->querySubObject("Range")->property("Start").toInt();
+    int pointBookmarksEnd = pointBookmarks->querySubObject("Range")->property("End").toInt();
 
-    docRange->dynamicCall("setRange(QVariant, QVariant)", answerBookmarksStart, pointBookmarksStart);
+    docRange->dynamicCall("setRange(QVariant, QVariant)", answerBookmarksEnd, pointBookmarksStart);
 
     docRange->dynamicCall("Select()");
 
@@ -124,6 +118,13 @@ bool DocReadWriter::convert()
     answerdoc->dynamicCall("SaveAs(const QString&)", answerDocPath);
     answerdoc->dynamicCall("Close(boolean)", true);
 
+    QAxObject *degradeBookmarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("分数"));
+    if (!degradeBookmarks) {
+        return false;
+    }
+    int degradeBookmarksStart = degradeBookmarks->querySubObject("Range")->property("Start").toInt();
+    int degradeBookmarksEnd = degradeBookmarks->querySubObject("Range")->property("End").toInt();
+
     //获取“难度”书签
     QAxObject *difficultyBookemarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("难度"));
     if (!difficultyBookemarks) {
@@ -131,28 +132,31 @@ bool DocReadWriter::convert()
     }
 
     int difficultyBookemarksStart = difficultyBookemarks->querySubObject("Range")->property("Start").toInt();
-
-    docRange->dynamicCall("setRange(QVariant, QVariant)", pointBookmarksStart, difficultyBookemarksStart);
+    int difficultyBookemarksEnd = difficultyBookemarks->querySubObject("Range")->property("End").toInt();
 
     //获取“结束”书签
-    QAxObject *endBookmarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("结束"));
+    QAxObject *endBookmarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("题目结束"));
     if (!endBookmarks) {
         return false;
     }
     int endBookmarksStart = endBookmarks->querySubObject("Range")->property("Start").toInt();
 
-    docRange->dynamicCall("setRange(QVariant, QVariant)", pointBookmarksStart, difficultyBookemarksStart);
+    docRange->dynamicCall("setRange(QVariant, QVariant)", pointBookmarksEnd, degradeBookmarksStart);
     point = docRange->property("Text").toString().trimmed();
 
-    docRange->dynamicCall("setRange(QVariant, QVariant)", difficultyBookemarksStart, endBookmarksStart);
+    docRange->dynamicCall("setRange(QVariant, QVariant)", degradeBookmarksEnd, difficultyBookemarksStart);
+    degrade = docRange->property("Text").toString().trimmed();
+
+    docRange->dynamicCall("setRange(QVariant, QVariant)", difficultyBookemarksEnd, endBookmarksStart);
 
     difficulty = docRange->property("Text").toString().trimmed();
 
     clip->clear();      //关闭文档前 清空剪贴板
-    documents->dynamicCall("Close(boolean)", true);
 
     return true;
 }
+
+
 
 QString DocReadWriter::getQuestion()
 {
@@ -179,6 +183,11 @@ QString DocReadWriter::getPoint()
     return point;
 }
 
+QString DocReadWriter::getDegrade()
+{
+    return degrade;
+}
+
 QString DocReadWriter::getDifficulty()
 {
     return difficulty;
@@ -186,6 +195,12 @@ QString DocReadWriter::getDifficulty()
 
 void DocReadWriter::parserImage(QString &html, QString type)
 {
+    QFile wpsfile(QString("%1.html").arg(type));
+    wpsfile.open(QIODevice::WriteOnly);
+    QTextStream fs(&wpsfile);
+    fs << html;
+    wpsfile.close();
+
     html.replace(QString("\\"), QString("/"));
     html.remove("file:///");
 
@@ -210,14 +225,15 @@ void DocReadWriter::parserImage(QString &html, QString type)
     start.clear();
     startidx = 0;
 
-    while((startidx = html.indexOf("<![if !vml]>", startidx)) != -1){
+    while((startidx = html.indexOf("<img", startidx)) != -1){
         start.prepend(startidx);
         startidx ++;
     }
 
     for (int i = 0; i < start.length(); ++i) {
         int srcStart = html.indexOf("src=\"", start.at(i))+5;
-        int srcEnd = html.indexOf("v:shapes",srcStart)-2;
+        int srcEnd = html.indexOf("\"",srcStart);
+        srcEnd = html.indexOf("\"", srcEnd);
         QString imgOriginalPath = html.mid(srcStart,srcEnd-srcStart);
 
         QFile imgfile(imgOriginalPath);
@@ -227,4 +243,23 @@ void DocReadWriter::parserImage(QString &html, QString type)
 
         html.replace(imgOriginalPath, imgFinalPath);
     }
+}
+
+bool DocReadWriter::setHeader(QAxObject *doc, QString school, QString subjectName, QString answerOrNot, QString testType, QString testTime, QString teacherName)
+{
+    QAxObject *schoolBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("学院"));
+    QAxObject *subjectBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("考试科目"));
+    QAxObject *AQBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("答案"));
+    QAxObject *testTypeBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("考试方式"));
+    QAxObject *testTimeBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("考试时间"));
+    QAxObject *teacherNameBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("出题人"));
+
+    schoolBookmarks->querySubObject("Range")->setProperty("Text", school);
+    subjectBookmarks->querySubObject("Range")->setProperty("Text", subjectName);
+    AQBookmarks->querySubObject("Range")->setProperty("Text", answerOrNot);
+    testTypeBookmarks->querySubObject("Range")->setProperty("Text", testType);
+    testTimeBookmarks->querySubObject("Range")->setProperty("Text", testTime);
+    teacherNameBookmarks->querySubObject("Range")->setProperty("Text", teacherName);
+
+    return true;
 }

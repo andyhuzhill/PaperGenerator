@@ -30,15 +30,20 @@ newSubjectForm::newSubjectForm(QWidget *parent) :
     QSqlQuery query;
     query.exec("SELECT subjectName FROM subjects");
     ui->subjectsListsView->clear();
+    ui->subjectCB2->clear();
+    ui->subjectsCB->clear();
     while (query.next()) {
         ui->subjectsListsView->addItem(query.value(0).toString());
         ui->subjectsCB->addItem(query.value(0).toString());
+        ui->subjectCB2->addItem(query.value(0).toString());
     }
 
     QSettings settings(OrgName, AppName);
 
     questionLibraryPath = settings.value("paperPath").toString();
     questionLibraryPath.replace("\\","/");
+
+    questionNumRefresh();
 }
 
 newSubjectForm::~newSubjectForm()
@@ -85,17 +90,17 @@ void newSubjectForm::on_newSubjectButton_clicked()
         QDir dir(questionLibraryPath);
         dir.mkdir(subjectName);
         subjectListRefresh();
-        QSqlQuery infoQuery;
-        infoQuery.exec("SELECT numOfSubjects FROM allInof");
-        while (infoQuery.next()) {
-            int numOfSubjects = infoQuery.value(0).toInt();
-            infoQuery.exec(QString("UPDATE allInfo SET numOfSubjects = %1 WHERE numOfSubjects = %2").arg(numOfSubjects+1).arg(numOfSubjects));
+        QSqlQuery query;
+        query.exec("SELECT numOfSubjects FROM allInfo");
+        while (query.next()) {
+            int numOfSubjects = query.value(0).toInt();
+            query.exec(QString("UPDATE allInfo SET numOfSubjects = %1 WHERE numOfSubjects = %2").arg(numOfSubjects+1).arg(numOfSubjects));
         }
-
+        ui->questionTypeList->clear();
+        ui->questionTypesCB->clear();
     }else{
         QMessageBox::information(this, tr("警告"), tr("课程数据库创建失败！"), QMessageBox::Ok);
     }
-
 }
 
 void newSubjectForm::on_newTypeButton_clicked()
@@ -182,11 +187,13 @@ void newSubjectForm::questionTypeListRefresh(QString subject)
 
     ui->questionTypeList->clear();
     ui->questionTypesCB->clear();
+    ui->quesTypeCB2->clear();
     if (query.value(0).toString() == subject) {
         query.exec(QString("SELECT questionTypes FROM \"%1\"").arg(subject));
         while (query.next()) {
             ui->questionTypeList->addItem(query.value(0).toString());
             ui->questionTypesCB->addItem(query.value(0).toString());
+            ui->quesTypeCB2->addItem(query.value(0).toString());
         }
     }
 }
@@ -198,9 +205,11 @@ void newSubjectForm::subjectListRefresh()
 
     ui->subjectsListsView->clear();
     ui->subjectsCB->clear();
+    ui->subjectCB2->clear();
     while (query.next()) {
         ui->subjectsListsView->addItem(query.value(0).toString());
         ui->subjectsCB->addItem(query.value(0).toString());
+        ui->subjectCB2->addItem(query.value(0).toString());
     }
 }
 
@@ -260,10 +269,17 @@ void newSubjectForm::on_deleteSelectedSubject_clicked()
     if (status1 && status2) {
         QMessageBox::information(this, tr("信息"), tr("课程删除成功！"), QMessageBox::Ok);
         subjectListRefresh();
+        QSqlQuery query;
+        query.exec("SELECT numOfSubjects FROM allInfo");
+        query.next();
+        int numOfSubjects = query.value(0).toInt();
+        query.exec(QString("UPDATE allInfo SET numOfSubjects = %1 WHERE numOfSubjects = %2").arg(numOfSubjects-1).arg(numOfSubjects));
+
+        ui->questionTypeList->clear();
+        ui->questionTypesCB->clear();
     }else{
         QMessageBox::warning(this, tr("警告"), tr("课程删除失败"), QMessageBox::Ok);
     }
-
 }
 
 void newSubjectForm::on_deleteSelectedType_clicked()
@@ -337,13 +353,13 @@ void newSubjectForm::on_startInput_clicked()
         return;
     }
 
-    word = new QAxWidget("Word.Application");
+    word = new QAxWidget(wordAppName);
     if (!word) {
         QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
         return ;
     }
     word->setProperty("Visible", false);    //隐藏word程序
-
+    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
 
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {
@@ -353,11 +369,12 @@ void newSubjectForm::on_startInput_clicked()
         return ;
     }
 
-    DocReadWriter *docread = new DocReadWriter(this, fileName, QString("%1/%2/%3").arg(questionLibraryPath).arg(subjectName).arg(questionTypeName));
+    DocReadWriter *docread = new DocReadWriter(this);
 
+    docread->setSourceDest(fileName, QString("%1/%2/%3").arg(questionLibraryPath).arg(subjectName).arg(questionTypeName));
     docread->setDocuemnt(docs);
 
-    if(!docread->convert()){
+    if(!docread->readAndConvert()){
         QMessageBox::warning(this, tr("警告"), tr("文件信息提取失败！"), QMessageBox::Ok);
         word->dynamicCall("Quit(boolean)", true);
         delete word;
@@ -381,9 +398,13 @@ void newSubjectForm::on_startInput_clicked()
 
     QString difficulty = docread->getDifficulty();
 
-    QString degrade = "";
+    QString degrade = docread->getDegrade();
 
     QSqlQuery query;
+
+    query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
+    query.next();
+    int numOfQuestions = query.value(0).toInt()+1;
 
     QString insertInfoCmd = QString("INSERT INTO '%1_%2' VALUES("
                                     "%3,"           //id
@@ -394,35 +415,18 @@ void newSubjectForm::on_startInput_clicked()
                                     "'%8',"         //Point
                                     "'%9',"         //Difficulty
                                     "'%10')"        //degrade
-                                    ).arg(ui->subjectsCB->currentText()).arg(ui->questionTypesCB->currentText()).arg(1).arg(question).arg(answer).arg(questionPath).arg(answerPath).arg(point).arg(difficulty).arg(degrade);
+                                    ).arg(ui->subjectsCB->currentText()).arg(ui->questionTypesCB->currentText()).arg(numOfQuestions).arg(question).arg(answer).arg(questionPath).arg(answerPath).arg(point).arg(difficulty).arg(degrade);
 
     bool status = query.exec(insertInfoCmd);
     if (status) {
         QMessageBox::information(this, tr("通知"),tr("试题录入成功！"),QMessageBox::Ok);
-        //        QWidget *widget = new QWidget();
-        //        QVBoxLayout *layout = new QVBoxLayout(widget);
-        //        QTextBrowser *tb = new QTextBrowser(this);
-
-        //        QString sele;
-        //        sele = QString("SELECT Question FROM %1_%2").arg(subjectName).arg(questionType);
-        //        query.exec(sele);
-        //        while(query.next()){
-        //            tb->insertHtml(query.value(0).toString());
-        //        }
-
-        //        sele = QString("SELECT Answer FROM %1_%2").arg(subjectName).arg(questionType);
-        //        query.exec(sele);
-        //        while(query.next()){
-        //            tb->insertHtml(query.value(0).toString());
-        //        }
-
-        //        layout->addWidget(tb);
-        //        widget->setLayout(layout);
-        //        widget->show();
-
+        query.exec(QString("UPDATE '%1' SET numOfQuestions = %2 WHERE questionTypes = '%3'").arg(subjectName).arg(numOfQuestions).arg(questionTypeName));
+        questionNumRefresh();
     }else{
         QMessageBox::warning(this, tr("警告"), tr("试题录入失败!"), QMessageBox::Ok);
     }
+
+    query.exec(QString("UPDATE '%1' SET numOfQuestions = %2 WHERE questionTypes = '%3'").arg(subjectName).arg(numOfQuestions).arg(questionTypeName));
     delete docread;
 }
 
@@ -444,12 +448,15 @@ void newSubjectForm::on_startInputMany_clicked()
         return ;
     }
 
-    word = new QAxWidget("Word.Application");
+    QMessageBox::about(this, tr("说明"), tr("批量录入文件可能需要较长时间，请耐心等待进度条走完即可！"));
+
+    word = new QAxWidget(wordAppName);
     if (!word) {
         QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
         return ;
     }
     word->setProperty("Visible", false);    //隐藏word程序
+    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
 
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {
@@ -464,17 +471,23 @@ void newSubjectForm::on_startInputMany_clicked()
 
     QSqlQuery query;
 
+    query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
+    query.next();
+    int numOfQuestions = query.value(0).toInt();
+
     ui->progressBar->setMaximum(fileList.length());
     ui->progressBar->show();
 
     int cnt= 0;
+    int quescnt = 0;
     foreach(QString file, fileList){
         if (file.endsWith(".doc") || file.endsWith(".docx")) {
-            DocReadWriter *docread = new DocReadWriter(this, QString("%1/%2").arg(inPath).arg(file), QString("%1/%2/%3").arg(questionLibraryPath).arg(subjectName).arg(questionTypeName));
+            DocReadWriter *docread = new DocReadWriter(this);
 
+            docread->setSourceDest(QString("%1/%2").arg(inPath).arg(file), QString("%1/%2/%3").arg(questionLibraryPath).arg(subjectName).arg(questionTypeName));
             docread->setDocuemnt(docs);
 
-            if(!docread->convert()){
+            if(!docread->readAndConvert()){
                 QMessageBox::warning(this, tr("警告"), tr("文件\"%1\"信息提取失败！").arg(file), QMessageBox::Ok);
                 word->dynamicCall("Quit(boolean)", true);
                 delete word;
@@ -495,9 +508,9 @@ void newSubjectForm::on_startInputMany_clicked()
 
             QString difficulty = docread->getDifficulty();
 
-            QString degrade = "";
+            QString degrade = docread->getDegrade();
 
-            QSqlQuery query;
+            numOfQuestions++;
 
             QString insertInfoCmd = QString("INSERT INTO '%1_%2' VALUES("
                                             "%3,"           //id
@@ -508,14 +521,15 @@ void newSubjectForm::on_startInputMany_clicked()
                                             "'%8',"         //Point
                                             "'%9',"         //Difficulty
                                             "'%10')"        //degrade
-                                            ).arg(subjectName).arg(questionTypeName).arg(1).arg(question).arg(answer).arg(questionPath).arg(answerPath).arg(point).arg(difficulty).arg(degrade);
+                                            ).arg(subjectName).arg(questionTypeName).arg(numOfQuestions).arg(question).arg(answer).arg(questionPath).arg(answerPath).arg(point).arg(difficulty).arg(degrade);
 
             if(!query.exec(insertInfoCmd)){
                 QMessageBox::warning(this, tr("警告"), tr("录入文件\"%1\"时，发生错误！").arg(file), QMessageBox::Ok);
+                ui->progressBar->hide();
                 return;
             }
-
             delete docread;
+            quescnt ++;
         }
         cnt ++;
         ui->progressBar->setValue(cnt);
@@ -523,6 +537,226 @@ void newSubjectForm::on_startInputMany_clicked()
 
     ui->progressBar->hide();
 
+    query.exec(QString("UPDATE '%1' SET numOfQuestions = %2 WHERE questionTypes = '%3'").arg(subjectName).arg(numOfQuestions).arg(questionTypeName));
+
     word->dynamicCall("Quit(boolean)", true);
     delete word;
+
+    QMessageBox::information(this, tr("信息"),tr("批量录入文件成功，共录入了%1道题目").arg(quescnt), QMessageBox::Ok);
+
+    questionNumRefresh();
+}
+
+void newSubjectForm::on_subjectCB2_currentIndexChanged(const QString &arg1)
+{
+    questionTypeListRefresh(arg1);
+
+    questionNumRefresh();
+}
+
+void newSubjectForm::on_quesTypeCB2_currentIndexChanged(const QString &arg1)
+{
+    ui->questionTypeEdit->setText(arg1);
+
+    questionNumRefresh();
+}
+
+void newSubjectForm::on_changeButton_clicked()
+{
+    QString subjectName = ui->subjectCB2->currentText();
+    QString questionTypeName = ui->quesTypeCB2->currentText();
+
+    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
+        return ;
+    }
+
+    QString degrade = ui->degradeEdit->text().trimmed();
+    QString difficulty = ui->difficultyEdit->text().trimmed();
+    QString point = ui->pointEdit->toPlainText();
+
+    QSqlQuery query;
+
+    bool status1 = query.exec(QString("UPDATE '%1_%2' SET degrade = %3 WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(degrade).arg(ui->questNumCB->text().toInt()));
+    bool status2 = query.exec(QString("UPDATE '%1_%2' SET Point = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(point).arg(ui->questNumCB->text().toInt()));
+    bool status3 = query.exec(QString("UPDATE '%1_%2' SET Difficulty = %3 WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(difficulty).arg(ui->questNumCB->text().toInt()));
+
+    if (status1 && status2 && status3) {
+        QMessageBox::information(this, tr("通知"), tr("修改试题成功！"), QMessageBox::Ok);
+    }else{
+        QMessageBox::warning(this, tr("警告"), tr("修改试题失败！"), QMessageBox::Ok);
+    }
+}
+
+void newSubjectForm::on_questNumCB_valueChanged(int arg1)
+{
+    QString subjectName = ui->subjectCB2->currentText();
+    QString questionTypeName = ui->quesTypeCB2->currentText();
+
+    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+        ui->answerBrowser->clear();
+        ui->questionBrowser->clear();
+        ui->difficultyEdit->clear();
+        ui->pointEdit->clear();
+        ui->degradeEdit->clear();
+        return ;
+    }
+
+    QSqlQuery query;
+
+    query.exec(QString("SELECT * FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(arg1));
+    query.next();
+    QString Question = query.value(1).toString();
+    QString Answer = query.value(2).toString();
+    QString Point = query.value(5).toString();
+    QString Difficulty = query.value(6).toString();
+    QString Degrade = query.value(7).toString();
+
+    qDebug() << Question;
+    qDebug() << Answer;
+
+    ui->questionBrowser->clear();
+    ui->questionBrowser->insertHtml(Question);
+    ui->answerBrowser->clear();
+    ui->answerBrowser->insertHtml(Answer);
+    ui->pointEdit->setText(Point);
+    ui->degradeEdit->setText(Degrade);
+    ui->difficultyEdit->setText(Difficulty);
+}
+
+void newSubjectForm::on_deleteButton_clicked()
+{
+    QString subjectName = ui->subjectCB2->currentText();
+    QString questionTypeName = ui->quesTypeCB2->currentText();
+
+    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
+        return ;
+    }
+
+    QSqlQuery query;
+
+    bool status1 = query.exec(QString("DELETE FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+    //    bool status2 = query.exec(QString("SELECT numOfQuestions FROM '%1'").arg(subjectName));
+    //    query.next();
+    //    int numOfQuestions = query.value(0).toInt();
+    //    bool status3 = query.exec(QString("UPDATE '%1' SET numOfQuestions = %2 WHERE numOfQuestions = %3").arg(subjectName).arg(numOfQuestions-1).arg(numOfQuestions));
+
+    if(status1){
+        QMessageBox::information(this, tr("通知"), tr("试题删除成功！"), QMessageBox::Ok);
+        ui->questionBrowser->clear();
+        ui->answerBrowser->clear();
+        ui->degradeEdit->clear();
+        ui->difficultyEdit->clear();
+        ui->pointEdit->clear();
+    }else{
+        QMessageBox::warning(this, tr("警告"), tr("试题删除失败！"), QMessageBox::Ok);
+    }
+}
+
+void newSubjectForm::questionNumRefresh()
+{
+    QSqlQuery query;
+
+    if(query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(ui->subjectCB2->currentText()).arg(ui->quesTypeCB2->currentText()))){
+        query.next();
+        int maxNum = query.value(0).toInt();
+        ui->questNumCB->setMaximum(maxNum);
+        ui->numOfQuestiongLabel->setText(tr("共 %1 题").arg(maxNum));
+    }
+}
+
+void newSubjectForm::on_newQuestionButton_clicked()
+{
+    word = new QAxWidget(wordAppName);
+    if (!word) {
+        QMessageBox::warning(this, tr("警告"), tr("无法找到Word程序，请检查是否已安装Micrsoft Word！"), QMessageBox::Ok);
+        return ;
+    }
+    word->setProperty("Visible", false);
+    QAxObject *docs = word->querySubObject("Documents");
+    if (!docs) {
+        QMessageBox::warning(this, tr("警告"), tr("无法获取Documents对象！"), QMessageBox::Ok);
+        return;
+    }
+    QDir dir(".");
+
+    docs->dynamicCall("Add(QString)",QString("%1/question.dot").arg(dir.currentPath()));
+    word->setProperty("Visible", true);
+
+//    connect(word, SIGNAL(destroyed()), this, SLOT)
+}
+
+void newSubjectForm::on_modifyQuestion_clicked()
+{
+    modifyQA("Question");
+}
+
+void newSubjectForm::modifyQA(QString QorA)
+{
+    word = new QAxWidget(wordAppName);
+    word->setControl(wordAppName);
+    if (!word) {
+        QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
+        return ;
+    }
+    word->setProperty("Visible", false);    //隐藏word程序
+    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+    QAxObject *docs = word->querySubObject("Documents");
+    if (!docs) {
+        QMessageBox::warning(this, tr("警告"), tr("无法获取Documents对象！"), QMessageBox::Ok);
+        return;
+    }
+
+    QString subjectName = ui->subjectCB2->currentText();
+    QString questionTypeName = ui->quesTypeCB2->currentText();
+    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
+        return ;
+    }
+
+    QSqlQuery query;
+    if (QorA == "Question") {
+        query.exec(QString("SELECT QuestionDocPath FROM '%1_%2'").arg(subjectName).arg(questionTypeName));
+    }else{
+        query.exec(QString("SELECT AnswerDocPath FROM '%1_%2'").arg(subjectName).arg(questionTypeName));
+    }
+    query.next();
+    QString docPath = query.value(0).toString();
+    QAxObject *doc = docs->querySubObject("Open(QString)", docPath);
+    word->setProperty("Visible", true);
+
+    connect(word, SIGNAL(Close()), this, SLOT(onWordQuit()));
+}
+
+void newSubjectForm::on_modifyAnswer_clicked()
+{
+    modifyQA("Answer");
+}
+
+void newSubjectForm::onWordQuit()
+{
+    QMessageBox::about(this, tr("信号"), tr("Word 退出了！"));
+
+//    word = new QAxWidget(wordAppName,this);
+//    if (!word) {
+//        QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
+//        return ;
+//    }
+//    word->setProperty("Visible", false);    //隐藏word程序
+//    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+//    QAxObject *docs = word->querySubObject("Documents");
+//    if (!docs) {
+//        QMessageBox::warning(this, tr("警告"), tr("无法获取Documents对象！"), QMessageBox::Ok);
+//        return;
+//    }
+
+//    QString subjectName = ui->subjectCB2->currentText();
+//    QString questionTypeName = ui->quesTypeCB2->currentText();
+//    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+//        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
+//        return ;
+//    }
+
+//    word->dynamicCall("Quit(boolean)", true);
 }

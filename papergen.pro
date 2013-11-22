@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     newsubjectform.cpp \
     manageuserform.cpp \
     docreadwriter.cpp \
-    firstsettingsdialog.cpp
+    firstsettingsdialog.cpp \
+    question.cpp
 
 HEADERS  += mainwindow.h \
     logindialog.h \
@@ -29,7 +30,8 @@ HEADERS  += mainwindow.h \
     manageuserform.h \
     docreadwriter.h \
     firstsettingsdialog.h \
-    defs.h
+    defs.h \
+    question.h
 
 FORMS    += mainwindow.ui \
     logindialog.ui \

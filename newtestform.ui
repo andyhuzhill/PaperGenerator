@@ -6,55 +6,32 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>683</width>
-    <height>452</height>
+    <width>769</width>
+    <height>549</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QListWidget" name="listWidget">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>100</y>
-     <width>161</width>
-     <height>321</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>70</y>
-     <width>81</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>题型列表：</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="exitButton">
    <property name="geometry">
     <rect>
-     <x>560</x>
-     <y>410</y>
-     <width>101</width>
-     <height>27</height>
+     <x>500</x>
+     <y>500</y>
+     <width>141</width>
+     <height>41</height>
     </rect>
    </property>
    <property name="text">
     <string>返回</string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>30</y>
-     <width>411</width>
+     <width>671</width>
      <height>29</height>
     </rect>
    </property>
@@ -75,7 +52,7 @@
     <item>
      <widget class="QLabel" name="labelQuestionType">
       <property name="text">
-       <string>题型：</string>
+       <string>题目类型：</string>
       </property>
       <property name="buddy">
        <cstring>questionTypeCB</cstring>
@@ -86,6 +63,377 @@
      <widget class="QComboBox" name="questionTypeCB"/>
     </item>
    </layout>
+  </widget>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>70</y>
+     <width>731</width>
+     <height>421</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab">
+    <attribute name="title">
+     <string>手动组卷</string>
+    </attribute>
+    <widget class="QTextBrowser" name="questionTextBrowser">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>70</y>
+       <width>331</width>
+       <height>192</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTextBrowser" name="answerTextBrowser">
+     <property name="geometry">
+      <rect>
+       <x>365</x>
+       <y>70</y>
+       <width>341</width>
+       <height>192</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="chooseThisQuestion">
+     <property name="geometry">
+      <rect>
+       <x>570</x>
+       <y>290</y>
+       <width>141</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>选中该题</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>50</y>
+       <width>71</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>题目：</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>370</x>
+       <y>50</y>
+       <width>71</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>答案：</string>
+     </property>
+    </widget>
+    <widget class="QWidget" name="layoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>10</y>
+       <width>411</width>
+       <height>29</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>题号：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="questionNum"/>
+      </item>
+      <item>
+       <widget class="QLabel" name="totalQuestionNum">
+        <property name="text">
+         <string>共0题</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QLabel" name="label_6">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>280</y>
+       <width>71</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>知识点：</string>
+     </property>
+    </widget>
+    <widget class="QTextEdit" name="pointEdit">
+     <property name="geometry">
+      <rect>
+       <x>300</x>
+       <y>280</y>
+       <width>241</width>
+       <height>91</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QWidget" name="layoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>280</y>
+       <width>191</width>
+       <height>91</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>分数：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="degradeEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_5">
+        <property name="text">
+         <string>难度：</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="difficultyEdit">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_2">
+    <attribute name="title">
+     <string>自动组卷</string>
+    </attribute>
+    <widget class="QPlainTextEdit" name="alreadySelected">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>90</y>
+       <width>371</width>
+       <height>271</height>
+      </rect>
+     </property>
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_9">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>70</y>
+       <width>151</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>已选中的题目类型数量：</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="autoChooseQuestions">
+     <property name="geometry">
+      <rect>
+       <x>510</x>
+       <y>80</y>
+       <width>131</width>
+       <height>91</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>自动抽题</string>
+     </property>
+    </widget>
+    <widget class="QWidget" name="layoutWidget">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>20</y>
+       <width>371</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>题目数量：</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="questNum"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="chooseMany">
+        <property name="text">
+         <string>选中</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QPushButton" name="clearButton">
+     <property name="geometry">
+      <rect>
+       <x>510</x>
+       <y>280</y>
+       <width>131</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>清空选择</string>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_3">
+    <attribute name="title">
+     <string>修改选题</string>
+    </attribute>
+    <widget class="QPushButton" name="deleteThisQuestion">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>360</y>
+       <width>93</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string> 删除选中题目</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="alreadySelectQuestions">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>30</y>
+       <width>211</width>
+       <height>321</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_7">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>10</y>
+       <width>81</width>
+       <height>17</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>已选题目：</string>
+     </property>
+    </widget>
+    <widget class="QTextBrowser" name="questionTextBrowser_2">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>30</y>
+       <width>241</width>
+       <height>321</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTextBrowser" name="answerTextBrowser_2">
+     <property name="geometry">
+      <rect>
+       <x>480</x>
+       <y>30</y>
+       <width>241</width>
+       <height>321</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_10">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>10</y>
+       <width>54</width>
+       <height>12</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>题目：</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>480</x>
+       <y>10</y>
+       <width>54</width>
+       <height>12</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>答案：</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="clearAlreadySelection">
+     <property name="geometry">
+      <rect>
+       <x>620</x>
+       <y>360</y>
+       <width>91</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>清除已选题目</string>
+     </property>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="generatePaperButton">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>500</y>
+     <width>131</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>生成试卷</string>
+   </property>
   </widget>
  </widget>
  <resources/>

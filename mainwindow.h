@@ -22,13 +22,15 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void closeEvent(QCloseEvent *);
 private slots:
-    void on_pushButton_clicked();
     void newTest();
     void manageSubject();
     void manageUser();
 
     void about();
+    void help();
+    void textViewRefresh();
 
 private:
     Ui::MainWindow *ui;
@@ -43,7 +45,8 @@ private:
     QAction *quitAction;
     QAction *modifyAction;
 
-    QAction *aboutAction;
+    QAction *helpAction;
+//    QAction *aboutAction;
     QAction *aboutQtAction;
 
     QMenu *fileMenu;

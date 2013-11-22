@@ -7,14 +7,15 @@
 #include <QString>
 #include <iostream>
 #include <QFileInfo>
+#include "question.h"
+#include <QList>
+
 
 class DocReadWriter : public QObject
 {
     Q_OBJECT
 public:
     explicit DocReadWriter(QObject *parent = 0);
-
-    explicit DocReadWriter(QObject *parent = 0, QString sourceFile = "", QString DestinationPath = "");
 
     void setSourceDest(QString sourceFile, QString destPath){
         inputFileName = sourceFile;
@@ -27,20 +28,19 @@ public:
         documents = docs;
     }
 
-    void setSelection(QAxObject *sel){
-        selection = sel;
-    }
-
     void setQuestionType(QString type){
         questionType = type;
     }
 
-    bool convert();
+    bool setHeader(QAxObject *doc, QString school, QString subjectName, QString answerOrNot, QString testType, QString testTime, QString teacherName);
+
+    bool readAndConvert();
     QString getQuestion();
     QString getQuestionDocPath();
     QString getAnswer();
     QString getAnswerDocPath();
     QString getPoint();
+    QString getDegrade();
     QString getDifficulty();
 
 signals:
@@ -48,18 +48,19 @@ signals:
 public slots:
 
 private:
+
     void parserImage(QString &html, QString type);
     QAxObject *documents;
-    QAxObject *selection;
     QString inputFileName;  //输入文件名
     QString inputFileBaseName;
     QString outPath;        //输出目录
     QString questionType;   //题型
     QString questionHTML;   //问题
-    QString questionDocPath;
+    QString questionDocPath; //问题文件路径
     QString answerHTML;     //答案
-    QString answerDocPath;
+    QString answerDocPath;  //答案文件路径
     QString point;          //知识点
+    QString degrade;        //分数
     QString difficulty;     //难度 （1～ 10）
 };
 
