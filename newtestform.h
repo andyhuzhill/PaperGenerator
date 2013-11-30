@@ -6,6 +6,10 @@
 
 #include "question.h"
 
+class QAxObject;
+class QAxWidget;
+class QListWidgetItem;
+
 namespace Ui {
 class newTestForm;
 }
@@ -20,12 +24,21 @@ public:
 
     void questionNumRefresh();
 
+    void closeEvent(QCloseEvent *);
+
+    void setPaperName(QString paperName);
+
+    bool savePaper(QString paperName);
+
+    void autoChoose();
+    bool checkSubjectQuestionType();
+signals:
+    void contentChanged();
+
 private slots:
     void on_exitButton_clicked();
 
     void on_SubjectNameCB_currentIndexChanged(const QString &arg1);
-
-    void on_questionNum_valueChanged(int arg1);
 
     void on_questionTypeCB_currentIndexChanged(const QString &arg1);
 
@@ -41,16 +54,25 @@ private slots:
 
     void on_tabWidget_currentChanged(QWidget *arg1);
 
-    void on_alreadySelectQuestions_currentRowChanged(int currentRow);
-
     void on_autoChooseQuestions_clicked();
 
     void on_clearButton_clicked();
 
     void on_clearAlreadySelection_clicked();
 
+    void paperGenerate(QAxObject *docs, QList<Question> question, QStringList &itemList, QString outFileName);
+
+    void on_alreadySelectQuestions_itemClicked(QListWidgetItem *item);
+
+    void on_questionNumListWidget_itemClicked(QListWidgetItem *item);
+
+    void on_questionNumListWidget_currentRowChanged(int currentRow);
+
+    void on_saveQuestionButton_clicked();
+
 private:
     Ui::newTestForm *ui;
+    QAxWidget *word;
     QList<Question> questions;
 };
 

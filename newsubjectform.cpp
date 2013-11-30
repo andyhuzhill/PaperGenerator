@@ -15,6 +15,9 @@
 #include <QDebug>
 #include <QTextBrowser>
 #include <QVBoxLayout>
+#include <QClipboard>
+#include <QMimeData>
+#include <QList>
 #include "defs.h"
 
 newSubjectForm::newSubjectForm(QWidget *parent) :
@@ -33,9 +36,13 @@ newSubjectForm::newSubjectForm(QWidget *parent) :
     ui->subjectCB2->clear();
     ui->subjectsCB->clear();
     while (query.next()) {
-        ui->subjectsListsView->addItem(query.value(0).toString());
-        ui->subjectsCB->addItem(query.value(0).toString());
-        ui->subjectCB2->addItem(query.value(0).toString());
+        QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
+        //        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
+        //        item->setCheckState(Qt::Unchecked);
+
+        ui->subjectsListsView->addItem(item);
+        ui->subjectsCB->addItem(item->text());
+        ui->subjectCB2->addItem(item->text());
     }
 
     QSettings settings(OrgName, AppName);
@@ -44,6 +51,7 @@ newSubjectForm::newSubjectForm(QWidget *parent) :
     questionLibraryPath.replace("\\","/");
 
     questionNumRefresh();
+    modifyWhich = 0;
 }
 
 newSubjectForm::~newSubjectForm()
@@ -51,19 +59,71 @@ newSubjectForm::~newSubjectForm()
     delete ui;
 }
 
+void newSubjectForm::closeEvent(QCloseEvent *)
+{
+    emit contentChanged();
+}
+
+void newSubjectForm::imgParser(QString &html, QString QorA, QString outPath)
+{
+    html.replace(QString("\\"), QString("/"));
+    html.remove("file:///");
+
+    QList<int> start;
+    QList<int> end;
+
+    int startidx = 0;
+    int endidx = 0;
+
+    while((startidx = html.indexOf("<!--[if gte vml 1]>",startidx)) != -1){
+        start.prepend(startidx);
+        startidx ++;
+        if((endidx = html.indexOf("<![endif]-->", startidx)) != -1){
+            end.prepend(endidx);
+        }
+    }
+
+    for (int i = 0; i < start.length(); ++i) {
+        html.remove(start.at(i), end.at(i)-start.at(i)+12);
+    }
+
+    start.clear();
+    startidx = 0;
+
+    while((startidx = html.indexOf("<img", startidx)) != -1){
+        start.prepend(startidx);
+        startidx ++;
+    }
+
+    for (int i = 0; i < start.length(); ++i) {
+        int srcStart = html.indexOf("src=\"", start.at(i))+5;
+        int srcEnd = html.indexOf("\"",srcStart);
+        srcEnd = html.indexOf("\"", srcEnd);
+        QString imgOriginalPath = html.mid(srcStart,srcEnd-srcStart);
+
+        QFile imgfile(imgOriginalPath);
+        QFileInfo imgFileInfo(imgOriginalPath);
+        QString imgFinalPath = QString("%1/%2%3.%4").arg(outPath).arg(QorA).arg(i).arg(imgFileInfo.completeSuffix());
+        imgfile.copy(imgFinalPath);
+
+        html.replace(imgOriginalPath, imgFinalPath);
+    }
+}
+
 void newSubjectForm::on_newSubjectButton_clicked()
 {
-    int i = 0;
     QString subjectName = ui->SubjectNameEdit->text().trimmed();
     if (subjectName.isEmpty()) {
         QMessageBox::warning(this, tr("警告"), tr("课程名称不能为空！"), QMessageBox::Ok);
         return ;
     }
+    ui->SubjectNameEdit->setText(subjectName);
 
     QSqlQuery query;
 
     query.exec("SELECT SubjectName FROM subjects");
 
+    int i = 0;
     while (query.next()) {
         if (query.value(0).toString() == subjectName) {
             QMessageBox::warning(this, tr("警告"), tr("数据库中已存在课程《%1》,请重新输入一个课程名！").arg(subjectName), QMessageBox::Ok);
@@ -78,24 +138,22 @@ void newSubjectForm::on_newSubjectButton_clicked()
                                "questionTypes,"
                                "numOfQuestions integer)"
                                ).arg(subjectName);
-    qDebug() << "createSubjectcmd: \n" << createSubjectCmd;
     insertSubjectCmd = QString("INSERT INTO subjects VALUES("
                                "%1,"
                                "\"%2\","
                                "0)"
                                ).arg(i+1).arg(subjectName);
-    qDebug() << "insertSubjectCmd:\n" << insertSubjectCmd;
     if (query.exec(createSubjectCmd) && query.exec(insertSubjectCmd)) {
         QMessageBox::information(this, tr("通知"), tr("课程数据库创建成功！"), QMessageBox::Ok);
         QDir dir(questionLibraryPath);
         dir.mkdir(subjectName);
         subjectListRefresh();
-        QSqlQuery query;
-        query.exec("SELECT numOfSubjects FROM allInfo");
-        while (query.next()) {
-            int numOfSubjects = query.value(0).toInt();
-            query.exec(QString("UPDATE allInfo SET numOfSubjects = %1 WHERE numOfSubjects = %2").arg(numOfSubjects+1).arg(numOfSubjects));
-        }
+        //        QSqlQuery query;
+        //        query.exec("SELECT numOfSubjects FROM allInfo");
+        //        while (query.next()) {
+        //            int numOfSubjects = query.value(0).toInt();
+        //            query.exec(QString("UPDATE allInfo SET numOfSubjects = %1 WHERE numOfSubjects = %2").arg(numOfSubjects+1).arg(numOfSubjects));
+        //        }
         ui->questionTypeList->clear();
         ui->questionTypesCB->clear();
     }else{
@@ -119,7 +177,7 @@ void newSubjectForm::on_newTypeButton_clicked()
 
     QSqlQuery query;
 
-    query.exec(QString("SELECT questionTypes FROM %1").arg(subjectName));
+    query.exec(QString("SELECT questionTypes FROM '%1'").arg(subjectName));
 
     int i = 0;
     while(query.next()){
@@ -128,17 +186,15 @@ void newSubjectForm::on_newTypeButton_clicked()
             return ;
         }
         i++;
-        qDebug() << query.value(0).toString();
     }
 
     QString insertQuestionTypeCmd;
-    insertQuestionTypeCmd = QString("INSERT INTO %1 VALUES("
+    insertQuestionTypeCmd = QString("INSERT INTO '%1' VALUES("
                                     "%2,"
                                     "'%3',"
                                     "%4)"
                                     ).arg(subjectName).arg(i+1).arg(questionType).arg(0);
 
-    qDebug() << insertQuestionTypeCmd;
 
     QString insertQuestionTypeTableCmd;
     insertQuestionTypeTableCmd = QString("CREATE TABLE '%1_%2'("
@@ -150,7 +206,6 @@ void newSubjectForm::on_newTypeButton_clicked()
                                          "Point,"
                                          "Difficulty,"
                                          "degrade)").arg(subjectName).arg(questionType);
-    qDebug() << insertQuestionTypeTableCmd;
 
     bool status1 = query.exec(insertQuestionTypeCmd);
     bool status2 = query.exec(insertQuestionTypeTableCmd);
@@ -191,9 +246,12 @@ void newSubjectForm::questionTypeListRefresh(QString subject)
     if (query.value(0).toString() == subject) {
         query.exec(QString("SELECT questionTypes FROM \"%1\"").arg(subject));
         while (query.next()) {
-            ui->questionTypeList->addItem(query.value(0).toString());
-            ui->questionTypesCB->addItem(query.value(0).toString());
-            ui->quesTypeCB2->addItem(query.value(0).toString());
+            QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
+            //            item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
+            //            item->setCheckState(Qt::Unchecked);
+            ui->questionTypeList->addItem(item);
+            ui->questionTypesCB->addItem(item->text());
+            ui->quesTypeCB2->addItem(item->text());
         }
     }
 }
@@ -207,9 +265,13 @@ void newSubjectForm::subjectListRefresh()
     ui->subjectsCB->clear();
     ui->subjectCB2->clear();
     while (query.next()) {
-        ui->subjectsListsView->addItem(query.value(0).toString());
-        ui->subjectsCB->addItem(query.value(0).toString());
-        ui->subjectCB2->addItem(query.value(0).toString());
+        QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
+        //        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
+        //        item->setCheckState(Qt::Unchecked);
+
+        ui->subjectsListsView->addItem(item);
+        ui->subjectsCB->addItem(item->text());
+        ui->subjectCB2->addItem(item->text());
     }
 }
 
@@ -226,84 +288,84 @@ void newSubjectForm::on_questionTypeList_currentTextChanged(const QString &curre
 
 void newSubjectForm::on_deleteSelectedSubject_clicked()
 {
-    QString subjectToBeDelete;
-    if(ui->subjectsListsView->currentItem()){
-        subjectToBeDelete = ui->subjectsListsView->currentItem()->text();
-    }else{
+    QList<QListWidgetItem*> selectedSubjects = ui->subjectsListsView->selectedItems();
+
+    if (selectedSubjects.length() == 0) {
         QMessageBox::warning(this, tr("警告"), tr("没有选中要删除的课程名，请先选中"),QMessageBox::Ok);
         return ;
     }
-
     QSqlQuery query;
 
-    if(!query.exec(QString("SELECT questionTypes FROM '%1'").arg(subjectToBeDelete))){
-        QMessageBox::warning(this, tr("警告"), tr("删除失败！"), QMessageBox::Ok);
-        return ;
-    }
+    foreach (QListWidgetItem *item, selectedSubjects) {
+        if(!query.exec(QString("SELECT questionTypes FROM '%1'").arg(item->text()))){
+            QMessageBox::warning(this, tr("警告"), tr("删除《%1》失败！").arg(item->text()), QMessageBox::Ok);
+            return ;
+        }
+        QStringList types;
 
-    qDebug() << "SELECT questionTypes FROM '%1'" << QString("SELECT questionTypes FROM '%1'").arg(subjectToBeDelete);
+        while (query.next()) {
+            types.append(query.value(0).toString());
+        }
 
-    QStringList types;
+        foreach (QString str, types) {
+            if(!query.exec(QString("DROP TABLE '%1_%2'").arg(item->text()).arg(str))){
+                QMessageBox::warning(this, tr("警告"), tr("删除《%1》%2题型失败！").arg(item->text()).arg(str), QMessageBox::Ok);
+                return;
+            }
+        }
 
-    while (query.next()) {
-        types.append(query.value(0).toString());
-    }
+        bool status1 = query.exec(QString("DELETE FROM subjects where subjectName = '%1'").arg(item->text()));
 
-    foreach (QString str, types) {
-        if(!query.exec(QString("DROP TABLE '%1_%2'").arg(subjectToBeDelete).arg(str))){
-            QMessageBox::warning(this, tr("警告"), tr("删除失败！"), QMessageBox::Ok);
-            return;
+        bool status2 = query.exec(QString("DROP TABLE '%1'").arg(item->text()));
+
+        if (!status1 || !status2) {
+            QMessageBox::warning(this, tr("警告"), tr("课程《%1》删除失败").arg(item->text()), QMessageBox::Ok);
+            subjectListRefresh();
+            ui->questionTypeList->clear();
+            ui->questionTypesCB->clear();
+            return ;
         }
     }
 
-    bool status1 = query.exec(QString("DELETE FROM subjects where subjectName = '%1'").arg(subjectToBeDelete));
+    subjectListRefresh();
+    ui->questionTypeList->clear();
+    ui->questionTypesCB->clear();
 
-    bool status2 = query.exec(QString("DROP TABLE '%1'").arg(subjectToBeDelete));
+    QMessageBox::information(this, tr("通知"), tr("选择的科目已经删除"), QMessageBox::Ok);
 
-    query.exec("SELECT numOfSubjects FROM allInof");
-    while (query.next()) {
-        int numOfSubjects = query.value(0).toInt();
-        query.exec(QString("UPDATE allInfo SET numOfSubjects = %1 WHERE numOfSubjects = %2").arg(numOfSubjects-1).arg(numOfSubjects));
-    }
-
-    if (status1 && status2) {
-        QMessageBox::information(this, tr("信息"), tr("课程删除成功！"), QMessageBox::Ok);
-        subjectListRefresh();
-        QSqlQuery query;
-        query.exec("SELECT numOfSubjects FROM allInfo");
-        query.next();
-        int numOfSubjects = query.value(0).toInt();
-        query.exec(QString("UPDATE allInfo SET numOfSubjects = %1 WHERE numOfSubjects = %2").arg(numOfSubjects-1).arg(numOfSubjects));
-
-        ui->questionTypeList->clear();
-        ui->questionTypesCB->clear();
-    }else{
-        QMessageBox::warning(this, tr("警告"), tr("课程删除失败"), QMessageBox::Ok);
-    }
 }
 
 void newSubjectForm::on_deleteSelectedType_clicked()
 {
-    QString questionTypesToBeDelete;
-    if (ui->questionTypeList->currentItem()) {
-        questionTypesToBeDelete = ui->questionTypeList->currentItem()->text();
-    }else{
+    QList<QListWidgetItem*> selectedQuestionTypes = ui->questionTypeList->selectedItems();
+
+    if (selectedQuestionTypes.length() == 0) {
         QMessageBox::warning(this, tr("警告"), tr("没有选中要删除的题目类型，请先选中"),QMessageBox::Ok);
         return ;
     }
 
-    QString subject = ui->SubjectNameEdit->text().trimmed();
+    QString subjectName = ui->SubjectNameEdit->text().trimmed();
+    if (subjectName.isEmpty()) {
+        QMessageBox::warning(this, tr("警告"), tr("请先选中课程名称!"), QMessageBox::Ok);
+        return ;
+    }
 
     QSqlQuery query;
-    bool status1 = query.exec(QString("DELETE FROM '%1' where questionTypes = '%2'").arg( subject ).arg(questionTypesToBeDelete));
-    bool status2 = query.exec(QString("DROP TABLE '%1_%2").arg(subject).arg(questionTypesToBeDelete));
 
-    if (status1 && status2) {
-        QMessageBox::information(this, tr("信息"), tr("题目类型删除成功！"),QMessageBox::Ok);
-        questionTypeListRefresh(subject);
-    }else{
-        QMessageBox::warning(this, tr("警告"), tr("题目类型删除失败！"),QMessageBox::Ok);
+    foreach (QListWidgetItem *item, selectedQuestionTypes) {
+        bool status1 = query.exec(QString("DELETE FROM '%1' where questionTypes = '%2'").arg( subjectName ).arg(item->text()));
+        bool status2 = query.exec(QString("DROP TABLE '%1_%2'").arg(subjectName).arg(item->text()));
+
+        if (status1 && status2) {
+
+        }else{
+            QMessageBox::warning(this, tr("警告"), tr("题目类型删除失败！"),QMessageBox::Ok);
+            questionTypeListRefresh(subjectName);
+            return ;
+        }
     }
+    QMessageBox::information(this, tr("信息"), tr("题目类型删除成功！"),QMessageBox::Ok);
+    questionTypeListRefresh(subjectName);
 }
 
 void newSubjectForm::on_subjectsCB_currentIndexChanged(const QString &arg1)
@@ -375,7 +437,7 @@ void newSubjectForm::on_startInput_clicked()
     docread->setDocuemnt(docs);
 
     if(!docread->readAndConvert()){
-        QMessageBox::warning(this, tr("警告"), tr("文件信息提取失败！"), QMessageBox::Ok);
+        QMessageBox::warning(this, tr("警告"), tr("文件书签信息提取失败！"), QMessageBox::Ok);
         word->dynamicCall("Quit(boolean)", true);
         delete word;
         return ;
@@ -488,7 +550,7 @@ void newSubjectForm::on_startInputMany_clicked()
             docread->setDocuemnt(docs);
 
             if(!docread->readAndConvert()){
-                QMessageBox::warning(this, tr("警告"), tr("文件\"%1\"信息提取失败！").arg(file), QMessageBox::Ok);
+                QMessageBox::warning(this, tr("警告"), tr("文件\"%1\"书签信息提取失败！").arg(file), QMessageBox::Ok);
                 word->dynamicCall("Quit(boolean)", true);
                 delete word;
                 return ;
@@ -524,8 +586,10 @@ void newSubjectForm::on_startInputMany_clicked()
                                             ).arg(subjectName).arg(questionTypeName).arg(numOfQuestions).arg(question).arg(answer).arg(questionPath).arg(answerPath).arg(point).arg(difficulty).arg(degrade);
 
             if(!query.exec(insertInfoCmd)){
-                QMessageBox::warning(this, tr("警告"), tr("录入文件\"%1\"时，发生错误！").arg(file), QMessageBox::Ok);
+                QMessageBox::warning(this, tr("警告"), tr("录入文件\"%1\"时，发生错误！一般是书签信息提取失败。").arg(file), QMessageBox::Ok);
                 ui->progressBar->hide();
+                word->dynamicCall("Quit(boolean)", true);
+                delete word;
                 return;
             }
             delete docread;
@@ -563,6 +627,147 @@ void newSubjectForm::on_quesTypeCB2_currentIndexChanged(const QString &arg1)
 
 void newSubjectForm::on_changeButton_clicked()
 {
+    QSqlQuery query;
+    if (modifyWhich!=0) {
+        word = new QAxWidget(wordAppName);
+        if (!word) {
+            QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
+            return ;
+        }
+        word->setProperty("Visible", false);    //隐藏word程序
+        word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+        QAxObject *docs = word->querySubObject("Documents");
+        if (!docs) {
+            QMessageBox::warning(this, tr("警告"), tr("无法获得Documents对象"), QMessageBox::Ok);
+            word->dynamicCall("Quit(boolean)", true);
+            delete word;
+            return;
+        }
+
+        QString subjectName = ui->subjectCB2->currentText();
+        QString questionTypeName = ui->quesTypeCB2->currentText();
+
+        if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+            QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
+            word->dynamicCall("Quit(boolean)", true);
+            delete word;
+            return ;
+        }
+
+        QClipboard *clip = QApplication::clipboard();
+        const QMimeData *dat;
+        QAxObject *active_doc;
+        switch(modifyWhich){
+        case 1:
+            query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+            query.next();
+            docs->dynamicCall("Open(QString)", query.value(0).toString());
+            active_doc = word->querySubObject("ActiveDocument");
+            if (!active_doc) {
+                QMessageBox::warning(this, tr("警告"), tr("无法获得该文档！"), QMessageBox::Ok);
+                word->dynamicCall("Quit(Boolean)", true);
+                delete word;
+                return;
+            }
+            active_doc->dynamicCall("Select()");
+            active_doc->querySubObject("Range()")->dynamicCall("Copy()");
+
+            dat = clip->mimeData();
+
+            if (dat->hasHtml()) {
+                QString html = dat->html();
+                query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+                QString outPath = query.value(0).toString().remove("Answer.doc");
+                imgParser(html, "Question", outPath);
+                html.replace("\"","'");
+                query.exec(QString("UPDATE '%1_%2' SET Question = \"%3\" WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(html).arg(ui->questNumCB->text().toInt()));
+            }
+            clip->clear();
+            break;
+        case 2:
+            query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+            query.next();
+            docs->dynamicCall("Open(QString)", query.value(0).toString());
+            active_doc = word->querySubObject("ActiveDocument");
+            if (!active_doc) {
+                QMessageBox::warning(this, tr("警告"), tr("无法获得该文档！"), QMessageBox::Ok);
+                word->dynamicCall("Quit(boolean)", true);
+                delete word;
+                return;
+            }
+            active_doc->dynamicCall("Select()");
+            active_doc->querySubObject("Range()")->dynamicCall("Copy()");
+
+            dat = clip->mimeData();
+
+            if (dat->hasHtml()) {
+                QString html = dat->html();
+                query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+                query.next();
+                QString outPath = query.value(0).toString().remove("Answer.doc");
+                imgParser(html, "Answer", outPath);
+                html.replace("\"","'");
+                query.exec(QString("UPDATE '%1_%2' SET Answer = \"%3\" WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(html).arg(ui->questNumCB->text().toInt()));
+            }
+            clip->clear();
+            break;
+        default:
+            query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+            query.next();
+            docs->dynamicCall("Open(QString)", query.value(0).toString());
+            active_doc = word->querySubObject("ActiveDocument");
+            if (!active_doc) {
+                QMessageBox::warning(this, tr("警告"), tr("无法获得该文档！"), QMessageBox::Ok);
+                word->dynamicCall("Quit(Boolean)", true);
+                delete word;
+                return;
+            }
+            active_doc->dynamicCall("Select()");
+            active_doc->querySubObject("Range()")->dynamicCall("Copy()");
+
+            dat = clip->mimeData();
+
+            if (dat->hasHtml()) {
+                QString html = dat->html();
+                query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+                QString outPath = query.value(0).toString().remove("Answer.doc");
+                imgParser(html, "Question", outPath);
+                html.replace("\"","'");
+                query.exec(QString("UPDATE '%1_%2' SET Question = \"%3\" WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(html).arg(ui->questNumCB->text().toInt()));
+            }
+            clip->clear();
+
+            query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+            query.next();
+            docs->dynamicCall("Open(QString)", query.value(0).toString());
+            active_doc = word->querySubObject("ActiveDocument");
+            if (!active_doc) {
+                QMessageBox::warning(this, tr("警告"), tr("无法获得该文档！"), QMessageBox::Ok);
+                word->dynamicCall("Quit(Boolean)", true);
+                delete word;
+                return;
+            }
+            active_doc->dynamicCall("Select()");
+            active_doc->querySubObject("Range()")->dynamicCall("Copy()");
+
+            dat = clip->mimeData();
+
+            if (dat->hasHtml()) {
+                QString html = dat->html();
+                query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+                query.next();
+                QString outPath = query.value(0).toString().remove("Answer.doc");
+                imgParser(html, "Answer", outPath);
+                html.replace("\"","'");
+                query.exec(QString("UPDATE '%1_%2' SET Answer = \"%3\" WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(html).arg(ui->questNumCB->text().toInt()));
+            }
+            clip->clear();
+            break;
+        }
+        word->dynamicCall("Quit(boolean)", true);
+        delete word;
+    }
+
     QString subjectName = ui->subjectCB2->currentText();
     QString questionTypeName = ui->quesTypeCB2->currentText();
 
@@ -575,14 +780,14 @@ void newSubjectForm::on_changeButton_clicked()
     QString difficulty = ui->difficultyEdit->text().trimmed();
     QString point = ui->pointEdit->toPlainText();
 
-    QSqlQuery query;
-
-    bool status1 = query.exec(QString("UPDATE '%1_%2' SET degrade = %3 WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(degrade).arg(ui->questNumCB->text().toInt()));
+    bool status1 = query.exec(QString("UPDATE '%1_%2' SET Degrade = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(degrade).arg(ui->questNumCB->text().toInt()));
     bool status2 = query.exec(QString("UPDATE '%1_%2' SET Point = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(point).arg(ui->questNumCB->text().toInt()));
-    bool status3 = query.exec(QString("UPDATE '%1_%2' SET Difficulty = %3 WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(difficulty).arg(ui->questNumCB->text().toInt()));
+    bool status3 = query.exec(QString("UPDATE '%1_%2' SET Difficulty = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(difficulty).arg(ui->questNumCB->text().toInt()));
 
     if (status1 && status2 && status3) {
         QMessageBox::information(this, tr("通知"), tr("修改试题成功！"), QMessageBox::Ok);
+        on_questNumCB_valueChanged(ui->questNumCB->text().toInt());
+        modifyWhich = 0;
     }else{
         QMessageBox::warning(this, tr("警告"), tr("修改试题失败！"), QMessageBox::Ok);
     }
@@ -604,16 +809,13 @@ void newSubjectForm::on_questNumCB_valueChanged(int arg1)
 
     QSqlQuery query;
 
-    query.exec(QString("SELECT * FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(arg1));
+    query.exec(QString("SELECT * FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
     query.next();
     QString Question = query.value(1).toString();
     QString Answer = query.value(2).toString();
     QString Point = query.value(5).toString();
     QString Difficulty = query.value(6).toString();
     QString Degrade = query.value(7).toString();
-
-    qDebug() << Question;
-    qDebug() << Answer;
 
     ui->questionBrowser->clear();
     ui->questionBrowser->insertHtml(Question);
@@ -630,17 +832,13 @@ void newSubjectForm::on_deleteButton_clicked()
     QString questionTypeName = ui->quesTypeCB2->currentText();
 
     if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
-        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
+        QMessageBox::warning(this, tr("警告"), tr("请先选择课程和题型！"), QMessageBox::Ok);
         return ;
     }
 
     QSqlQuery query;
 
     bool status1 = query.exec(QString("DELETE FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
-    //    bool status2 = query.exec(QString("SELECT numOfQuestions FROM '%1'").arg(subjectName));
-    //    query.next();
-    //    int numOfQuestions = query.value(0).toInt();
-    //    bool status3 = query.exec(QString("UPDATE '%1' SET numOfQuestions = %2 WHERE numOfQuestions = %3").arg(subjectName).arg(numOfQuestions-1).arg(numOfQuestions));
 
     if(status1){
         QMessageBox::information(this, tr("通知"), tr("试题删除成功！"), QMessageBox::Ok);
@@ -677,19 +875,27 @@ void newSubjectForm::on_newQuestionButton_clicked()
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {
         QMessageBox::warning(this, tr("警告"), tr("无法获取Documents对象！"), QMessageBox::Ok);
+        word->dynamicCall("Quit(Boolean)", true);
+        delete word;
         return;
     }
     QDir dir(".");
+    QFile templa(QString("%1/question.dot").arg(dir.currentPath()));
+    templa.copy(QString("%1/newQuestion.doc").arg(dir.currentPath()));
 
-    docs->dynamicCall("Add(QString)",QString("%1/question.dot").arg(dir.currentPath()));
+    docs->dynamicCall("Open(QString)",QString("%1/newQuestion.doc").arg(dir.currentPath()));
     word->setProperty("Visible", true);
-
-//    connect(word, SIGNAL(destroyed()), this, SLOT)
+    word = 0;
 }
 
 void newSubjectForm::on_modifyQuestion_clicked()
 {
     modifyQA("Question");
+}
+
+void newSubjectForm::on_modifyAnswer_clicked()
+{
+    modifyQA("Answer");
 }
 
 void newSubjectForm::modifyQA(QString QorA)
@@ -717,46 +923,117 @@ void newSubjectForm::modifyQA(QString QorA)
 
     QSqlQuery query;
     if (QorA == "Question") {
-        query.exec(QString("SELECT QuestionDocPath FROM '%1_%2'").arg(subjectName).arg(questionTypeName));
+        query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+        modifyWhich += 1;
     }else{
-        query.exec(QString("SELECT AnswerDocPath FROM '%1_%2'").arg(subjectName).arg(questionTypeName));
+        query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
+        modifyWhich += 2;
     }
     query.next();
     QString docPath = query.value(0).toString();
-    QAxObject *doc = docs->querySubObject("Open(QString)", docPath);
+    docs->dynamicCall("Open(QString)", docPath);
     word->setProperty("Visible", true);
-
-    connect(word, SIGNAL(Close()), this, SLOT(onWordQuit()));
 }
 
-void newSubjectForm::on_modifyAnswer_clicked()
+void newSubjectForm::on_inputButton_clicked()
 {
-    modifyQA("Answer");
+    QDir dir(".");
+    QString fileName = QString("%1/newQuestion.doc").arg(dir.currentPath());
+    QFile fi(fileName);
+    if (!fi.exists()) {
+        QMessageBox::warning(this, tr("警告"), tr("没有新建的题目，请先新建！"), QMessageBox::Ok);
+        return ;
+    }
+
+    QString subjectName = ui->subjectsCB->currentText();
+    QString questionTypeName = ui->questionTypesCB->currentText();
+
+    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
+        return ;
+    }
+
+    word = new QAxWidget(wordAppName);
+    if (!word) {
+        QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
+        return ;
+    }
+    word->setProperty("Visible", false);    //隐藏word程序
+    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+
+    QAxObject *docs = word->querySubObject("Documents");
+    if (!docs) {
+        QMessageBox::warning(this, tr("警告"), tr("获取当前打开文档失败！"), QMessageBox::Ok);
+        word->dynamicCall("Quit(boolean)", true);
+        delete word;
+        return ;
+    }
+
+    DocReadWriter *docread = new DocReadWriter(this);
+
+    docread->setSourceDest(fileName, QString("%1/%2/%3").arg(questionLibraryPath).arg(subjectName).arg(questionTypeName));
+    docread->setDocuemnt(docs);
+
+    if(!docread->readAndConvert()){
+        QMessageBox::warning(this, tr("警告"), tr("文件书签信息提取失败！"), QMessageBox::Ok);
+        word->dynamicCall("Quit(boolean)", true);
+        delete word;
+        return ;
+    }
+
+    word->dynamicCall("Quit(boolean)", true);
+    delete word;
+
+    QString question = docread->getQuestion();
+    question.replace("\"","'");
+
+    QString answer = docread->getAnswer();
+    answer.replace("\"","'");
+
+    QString questionPath = docread->getQuestionDocPath();
+
+    QString answerPath = docread->getAnswerDocPath();
+
+    QString point = docread->getPoint();
+
+    QString difficulty = docread->getDifficulty();
+
+    QString degrade = docread->getDegrade();
+
+    QSqlQuery query;
+
+    query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
+    query.next();
+    int numOfQuestions = query.value(0).toInt()+1;
+
+    QString insertInfoCmd = QString("INSERT INTO '%1_%2' VALUES("
+                                    "%3,"           //id
+                                    "\"%4\","       //Question
+                                    "\"%5\","       //Answer
+                                    "'%6',"         //QuestionDocPath
+                                    "'%7',"         //AnswerDocPath
+                                    "'%8',"         //Point
+                                    "'%9',"         //Difficulty
+                                    "'%10')"        //degrade
+                                    ).arg(ui->subjectsCB->currentText()).arg(ui->questionTypesCB->currentText()).arg(numOfQuestions).arg(question).arg(answer).arg(questionPath).arg(answerPath).arg(point).arg(difficulty).arg(degrade);
+
+    bool status = query.exec(insertInfoCmd);
+    if (status) {
+        QMessageBox::information(this, tr("通知"),tr("试题录入成功！"),QMessageBox::Ok);
+        query.exec(QString("UPDATE '%1' SET numOfQuestions = %2 WHERE questionTypes = '%3'").arg(subjectName).arg(numOfQuestions).arg(questionTypeName));
+        questionNumRefresh();
+        QFile rmfile(fileName);
+        rmfile.remove();
+    }else{
+        QMessageBox::warning(this, tr("警告"), tr("试题录入失败!"), QMessageBox::Ok);
+    }
+
+    query.exec(QString("UPDATE '%1' SET numOfQuestions = %2 WHERE questionTypes = '%3'").arg(subjectName).arg(numOfQuestions).arg(questionTypeName));
+    delete docread;
 }
 
-void newSubjectForm::onWordQuit()
+void newSubjectForm::on_returnButton_clicked()
 {
-    QMessageBox::about(this, tr("信号"), tr("Word 退出了！"));
-
-//    word = new QAxWidget(wordAppName,this);
-//    if (!word) {
-//        QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
-//        return ;
-//    }
-//    word->setProperty("Visible", false);    //隐藏word程序
-//    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
-//    QAxObject *docs = word->querySubObject("Documents");
-//    if (!docs) {
-//        QMessageBox::warning(this, tr("警告"), tr("无法获取Documents对象！"), QMessageBox::Ok);
-//        return;
-//    }
-
-//    QString subjectName = ui->subjectCB2->currentText();
-//    QString questionTypeName = ui->quesTypeCB2->currentText();
-//    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
-//        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
-//        return ;
-//    }
-
-//    word->dynamicCall("Quit(boolean)", true);
+    emit contentChanged();
+    close();
 }

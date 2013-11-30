@@ -134,7 +134,7 @@ bool DocReadWriter::readAndConvert()
     int difficultyBookemarksStart = difficultyBookemarks->querySubObject("Range")->property("Start").toInt();
     int difficultyBookemarksEnd = difficultyBookemarks->querySubObject("Range")->property("End").toInt();
 
-    //获取“结束”书签
+    //获取“题目结束”书签
     QAxObject *endBookmarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("题目结束"));
     if (!endBookmarks) {
         return false;
@@ -193,14 +193,8 @@ QString DocReadWriter::getDifficulty()
     return difficulty;
 }
 
-void DocReadWriter::parserImage(QString &html, QString type)
+void DocReadWriter::parserImage(QString &html, QString QorA)
 {
-    QFile wpsfile(QString("%1.html").arg(type));
-    wpsfile.open(QIODevice::WriteOnly);
-    QTextStream fs(&wpsfile);
-    fs << html;
-    wpsfile.close();
-
     html.replace(QString("\\"), QString("/"));
     html.remove("file:///");
 
@@ -238,7 +232,7 @@ void DocReadWriter::parserImage(QString &html, QString type)
 
         QFile imgfile(imgOriginalPath);
         QFileInfo imgFileInfo(imgOriginalPath);
-        QString imgFinalPath = QString("%1/%2/%3%4.%5").arg(outPath).arg(inputFileBaseName).arg(type).arg(i).arg(imgFileInfo.completeSuffix());
+        QString imgFinalPath = QString("%1/%2/%3%4.%5").arg(outPath).arg(inputFileBaseName).arg(QorA).arg(i).arg(imgFileInfo.completeSuffix());
         imgfile.copy(imgFinalPath);
 
         html.replace(imgOriginalPath, imgFinalPath);

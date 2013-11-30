@@ -179,5 +179,4 @@ void manageUserForm::on_deleteUserButton_clicked()
         ui->UserLists->addItem(Logins.at(i).name);
     }
     settings->endArray();
-
 }

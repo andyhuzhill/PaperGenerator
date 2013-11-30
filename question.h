@@ -6,7 +6,8 @@
 class Question
 {
 public:
-    Question(int id , QString QuestionType, QString QuestionPath, QString AnswerPath, QString Point, QString Degrade, QString Difficulty);
+    Question(QString subject , int id , QString QuestionType, QString QuestionPath, QString AnswerPath, QString Point, QString Degrade, QString Difficulty);
+    QString getSubjectName();
     int getId();
     QString getQuestionType();
     QString getPoint();
@@ -16,6 +17,7 @@ public:
     QString getAnswerPath();
 private:
     int prvid;
+    QString subjectName;
     QString questionType;
     QString point;
     QString degrade;

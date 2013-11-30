@@ -1,7 +1,8 @@
 #include "question.h"
 
-Question::Question(int id, QString QuestionType,QString QuestionPath, QString AnswerPath, QString Point, QString Degrade, QString Difficulty)
+Question::Question(QString subject, int id,QString QuestionType, QString QuestionPath, QString AnswerPath, QString Point, QString Degrade, QString Difficulty)
 {
+    subjectName = subject;
     prvid = id;
     questionType = QuestionType;
     point = Point;
@@ -9,6 +10,11 @@ Question::Question(int id, QString QuestionType,QString QuestionPath, QString An
     difficulty = Difficulty;
     questionDocPath = QuestionPath;
     answerDocPath = AnswerPath;
+}
+
+QString Question::getSubjectName()
+{
+    return subjectName;
 }
 
 int Question::getId()

@@ -43,13 +43,14 @@ public:
     QString getDegrade();
     QString getDifficulty();
 
+    void parserImage(QString &html, QString type);
+
 signals:
 
 public slots:
 
 private:
 
-    void parserImage(QString &html, QString type);
     QAxObject *documents;
     QString inputFileName;  //输入文件名
     QString inputFileBaseName;

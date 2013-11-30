@@ -9,6 +9,7 @@ class QAction;
 class newSubjectForm;
 class newTestForm;
 class manageUserForm;
+class QListWidgetItem;
 
 namespace Ui {
 class MainWindow;
@@ -23,6 +24,7 @@ public:
     ~MainWindow();
 
     void closeEvent(QCloseEvent *);
+    void focusInEvent(QFocusEvent *);
 private slots:
     void newTest();
     void manageSubject();
@@ -31,6 +33,10 @@ private slots:
     void about();
     void help();
     void textViewRefresh();
+
+    void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
+
+    void on_deleteSelectPaper_clicked();
 
 private:
     Ui::MainWindow *ui;

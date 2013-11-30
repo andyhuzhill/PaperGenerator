@@ -17,6 +17,12 @@ public:
     explicit newSubjectForm(QWidget *parent = 0);
     ~newSubjectForm();
 
+    void imgParser(QString &html, QString QorA, QString outPath);
+
+    void closeEvent(QCloseEvent *);
+
+signals:
+    void contentChanged();
 
 private slots:
     void on_newSubjectButton_clicked();
@@ -63,7 +69,9 @@ private slots:
 
     void on_modifyAnswer_clicked();
 
-    void onWordQuit();
+    void on_inputButton_clicked();
+
+    void on_returnButton_clicked();
 
 private:
     Ui::newSubjectForm *ui;
@@ -73,6 +81,8 @@ private:
     void subjectListRefresh();
 
     QAxWidget *word;
+
+    int modifyWhich;
 
     QString questionLibraryPath;
 };

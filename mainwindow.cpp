@@ -42,6 +42,7 @@ void MainWindow::newTest()
     testForm->setWindowFlags(testForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
 
     testForm->show();
+    connect(testForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
 }
 
 void MainWindow::manageSubject()
@@ -50,6 +51,7 @@ void MainWindow::manageSubject()
     subjectForm->setWindowFlags(subjectForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
 
     subjectForm->show();
+    connect(subjectForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
 }
 
 void MainWindow::manageUser()
@@ -71,6 +73,11 @@ void MainWindow::about()
                        );
 }
 
+void MainWindow::focusInEvent(QFocusEvent *)
+{
+    textViewRefresh();
+}
+
 void MainWindow::help()
 {
     QDir dir(".");
@@ -81,6 +88,7 @@ void MainWindow::help()
 void MainWindow::textViewRefresh()
 {
     ui->textBrowser->clear();
+    ui->listWidget->clear();
 
     ui->textBrowser->insertPlainText(tr("课程名称       题目类型        题目数量\n"));
     ui->textBrowser->insertPlainText("==========================================\n");
@@ -98,6 +106,12 @@ void MainWindow::textViewRefresh()
         while(query.next()){
             ui->textBrowser->insertPlainText(tr("              %1             %2\n").arg(query.value(0).toString()).arg(query.value(1).toInt()));
         }
+    }
+
+    query.exec("SELECT paperName FROM savedPaper ");
+    while (query.next()) {
+        QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
+        ui->listWidget->addItem(item);
     }
 }
 
@@ -127,8 +141,8 @@ void MainWindow::createActions()
     quitAction->setShortcut(tr("Ctrl+Q"));
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
 
-//    aboutAction = new QAction(tr("关于本程序"), this);
-//    connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
+    //    aboutAction = new QAction(tr("关于本程序"), this);
+    //    connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
 
     helpAction = new QAction(tr("帮助文档"), this);
     helpAction->setShortcut(QKeySequence::HelpContents);
@@ -150,7 +164,7 @@ void MainWindow::createMenus()
     helpMenu = ui->menuBar->addMenu(tr("帮助信息"));
     helpMenu->addAction(helpAction);
     helpMenu->addSeparator();
-//    helpMenu->addAction(aboutAction);
+    //    helpMenu->addAction(aboutAction);
     helpMenu->addAction(aboutQtAction);
 }
 
@@ -161,3 +175,36 @@ void MainWindow::createToolBars()
 }
 
 
+
+void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
+{
+    testForm = new newTestForm();
+    testForm->setWindowFlags(testForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
+    testForm->setPaperName(item->text());
+    testForm->show();
+    connect(testForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
+}
+
+void MainWindow::on_deleteSelectPaper_clicked()
+{
+    QSqlQuery query;
+    QList<QListWidgetItem *> selectedPaper = ui->listWidget->selectedItems();
+    if (selectedPaper.length() == 0) {
+        QMessageBox::warning(this, tr("警告"), tr("请先选中要删除的试卷名称!"), QMessageBox::Ok);
+        return ;
+    }
+    foreach (QListWidgetItem *item, selectedPaper) {
+        if (item->text() == "autoSavedPaper") {
+            QMessageBox::information(this, tr("通知"), tr("自动保存的试卷无法删除"), QMessageBox::Ok);
+            continue;
+        }
+        bool status1 = query.exec(QString("DROP TABLE '%1_Paper'").arg(item->text()));
+        bool status2 = query.exec(QString("DELETE FROM savedPaper where paperName = '%1'").arg(item->text()));
+        if (!status1 || !status2) {
+            QMessageBox::warning(this, tr("警告"), tr("无法删除试卷<%1>").arg(item->text()));
+            return;
+        }
+    }
+
+    textViewRefresh();
+}

@@ -3,7 +3,6 @@
 #include "logindialog.h"
 
 #include <QSqlDatabase>
-#include <QMessageBox>
 #include <QTextCodec>
 #include <QTranslator>
 
@@ -37,7 +36,7 @@ int main(int argc, char *argv[])
     QApplication::addLibraryPath("./plugins");
 
     if (!connect2Database()) {
-        return 0;
+        return -1;
     }
 
     LoginDialog login;        //登陆窗口
@@ -48,5 +47,5 @@ int main(int argc, char *argv[])
 
         return app.exec();
     }
-    return 0;
+    return -1;
 }
