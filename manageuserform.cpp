@@ -112,6 +112,10 @@ void manageUserForm::on_UserLists_itemClicked(QListWidgetItem *item)
 
 void manageUserForm::on_deleteUserButton_clicked()
 {
+    if (ui->UserLists->count() == 1) {
+        QMessageBox::warning(this, tr("警告"), tr("这已经是最后一个用户了，不可以删除！"), QMessageBox::Ok);
+        return ;
+    }
     QString name = ui->EditUserName->text().trimmed();
     QString passwd = ui->EditPasswd->text().trimmed();
     QString cpasswd = ui->ConfirmPasswd->text().trimmed();

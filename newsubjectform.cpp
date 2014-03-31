@@ -37,8 +37,6 @@ newSubjectForm::newSubjectForm(QWidget *parent) :
     ui->subjectsCB->clear();
     while (query.next()) {
         QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
-        //        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
-        //        item->setCheckState(Qt::Unchecked);
 
         ui->subjectsListsView->addItem(item);
         ui->subjectsCB->addItem(item->text());
@@ -148,12 +146,7 @@ void newSubjectForm::on_newSubjectButton_clicked()
         QDir dir(questionLibraryPath);
         dir.mkdir(subjectName);
         subjectListRefresh();
-        //        QSqlQuery query;
-        //        query.exec("SELECT numOfSubjects FROM allInfo");
-        //        while (query.next()) {
-        //            int numOfSubjects = query.value(0).toInt();
-        //            query.exec(QString("UPDATE allInfo SET numOfSubjects = %1 WHERE numOfSubjects = %2").arg(numOfSubjects+1).arg(numOfSubjects));
-        //        }
+
         ui->questionTypeList->clear();
         ui->questionTypesCB->clear();
     }else{
@@ -266,8 +259,6 @@ void newSubjectForm::subjectListRefresh()
     ui->subjectCB2->clear();
     while (query.next()) {
         QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
-        //        item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsUserCheckable);
-        //        item->setCheckState(Qt::Unchecked);
 
         ui->subjectsListsView->addItem(item);
         ui->subjectsCB->addItem(item->text());
@@ -553,6 +544,7 @@ void newSubjectForm::on_startInputMany_clicked()
                 QMessageBox::warning(this, tr("警告"), tr("文件\"%1\"书签信息提取失败！").arg(file), QMessageBox::Ok);
                 word->dynamicCall("Quit(boolean)", true);
                 delete word;
+                ui->progressBar->hide();
                 return ;
             }
 
@@ -1036,4 +1028,14 @@ void newSubjectForm::on_returnButton_clicked()
 {
     emit contentChanged();
     close();
+}
+
+void newSubjectForm::on_subjectsCB_activated(const QString &arg1)
+{
+    questionTypeListRefresh(arg1);
+}
+
+void newSubjectForm::on_subjectCB2_activated(const QString &arg1)
+{
+    questionTypeListRefresh(arg1);
 }

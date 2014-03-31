@@ -73,6 +73,10 @@ private slots:
 
     void on_returnButton_clicked();
 
+    void on_subjectsCB_activated(const QString &arg1);
+
+    void on_subjectCB2_activated(const QString &arg1);
+
 private:
     Ui::newSubjectForm *ui;
 

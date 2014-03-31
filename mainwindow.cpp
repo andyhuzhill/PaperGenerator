@@ -29,6 +29,8 @@ MainWindow::MainWindow(QWidget *parent) :
     createToolBars();
 
     textViewRefresh();
+    connect(ui->newTestButton, SIGNAL(clicked()), this, SLOT(newTest()));
+    connect(ui->manageQuestionButton, SIGNAL(clicked()), this, SLOT(manageSubject()));
 }
 
 MainWindow::~MainWindow()
@@ -110,7 +112,13 @@ void MainWindow::textViewRefresh()
 
     query.exec("SELECT paperName FROM savedPaper ");
     while (query.next()) {
-        QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
+        QString paperName = query.value(0).toString();
+        QListWidgetItem *item;
+        if (paperName == "autoSavedPaper") {
+            item = new QListWidgetItem(tr("自动保存试卷"));
+        }else{
+            item = new QListWidgetItem(query.value(0).toString());
+        }
         ui->listWidget->addItem(item);
     }
 }
@@ -132,8 +140,8 @@ void MainWindow::createActions()
     manageSubjectAction->setShortcut(tr("Ctrl+M"));
     connect(manageSubjectAction, SIGNAL(triggered()), this, SLOT(manageSubject()));
 
-    manageUserAction = new QAction(QIcon(":/images/add.png"), tr("添加用户"), this);
-    manageUserAction->setStatusTip(tr("添加一位用户"));
+    manageUserAction = new QAction(QIcon(":/images/add.png"), tr("用户管理"), this);
+    manageUserAction->setStatusTip(tr("添加用户或修改密码"));
     manageUserAction->setShortcut(tr("Ctrl+A"));
     connect(manageUserAction, SIGNAL(triggered()), this, SLOT(manageUser()));
 
@@ -170,8 +178,8 @@ void MainWindow::createMenus()
 
 void MainWindow::createToolBars()
 {
-    ui->mainToolBar->addAction(newTestAction);
-    ui->mainToolBar->addAction(manageSubjectAction);
+    //    ui->mainToolBar->addAction(newTestAction);
+    //    ui->mainToolBar->addAction(manageSubjectAction);
 }
 
 
@@ -180,7 +188,11 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
     testForm = new newTestForm();
     testForm->setWindowFlags(testForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
-    testForm->setPaperName(item->text());
+    if (item->text() == tr("自动保存试卷")) {
+        testForm->setPaperName("autoSavedPaper");
+    }else{
+        testForm->setPaperName(item->text());
+    }
     testForm->show();
     connect(testForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
 }

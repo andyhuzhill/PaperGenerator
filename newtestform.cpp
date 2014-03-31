@@ -10,6 +10,7 @@
 #include <ActiveQt/QAxObject>
 #include <QDesktopServices>
 #include <QDateTime>
+#include <QMap>
 
 #include "defs.h"
 #include "docreadwriter.h"
@@ -31,8 +32,28 @@ newTestForm::newTestForm(QWidget *parent) :
     }
 
     questions.clear();
+    points.clear();
+    tiaojians.clear();
 
     connect(ui->tabWidget, SIGNAL(currentChanged(int)), this, SLOT(onQuestionsrefresh()));
+
+    onQuestionsrefresh();
+
+    QStringList difficulties;
+    difficulties.append(tr("任意难度"));
+    for (int var = 1; var < 11; ++var) {
+        difficulties.append(QString("%1").arg(var));
+    }
+    ui->difficultyCB->addItems(difficulties);
+    ui->difficultyCB->setCurrentIndex(0);
+    ui->difficultyCB_2->addItems(difficulties);
+    ui->difficultyCB_2->setCurrentIndex(0);
+
+    connect(ui->pointsCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
+    connect(ui->difficultyCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
+    connect(ui->difficultyCB_2, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
+    connect(ui->SubjectNameCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
+    connect(ui->questionTypeCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
 }
 
 newTestForm::~newTestForm()
@@ -42,6 +63,7 @@ newTestForm::~newTestForm()
 
 void newTestForm::closeEvent(QCloseEvent *)
 {
+    savePaper("autoSavedPaper");
     emit contentChanged();
 }
 
@@ -62,14 +84,18 @@ void newTestForm::setPaperName(QString paperName)
         questions.append(Question(subjectName, id, questionTypeName, QuestionPath, AnswerPath, Point, Degrade, Difficulty));
     }
     onQuestionsrefresh();
+    ui->tabWidget->setCurrentWidget(ui->alreadyTab);
 }
 
 bool newTestForm::savePaper(QString paperName)
 {
     QSqlQuery query;
+    if(paperName == "autoSavedPaper"){
+        query.exec("DELETE FROM autoSavedPaper_Paper");
+    }
     if(query.exec(QString("SELECT * FROM savedPaper WHERE paperName = '%1'").arg(paperName))){
         query.next();
-        if(query.value(1).toString() == paperName){
+        if(query.value(1).toString() == paperName && paperName != "autoSavedPaper"){
             QMessageBox::warning(this, tr("警告"),tr("已经保存了一个名为'%1'的试题方案！").arg(paperName), QMessageBox::Ok);
             return false;
         }
@@ -102,58 +128,77 @@ bool newTestForm::savePaper(QString paperName)
         QMessageBox::about(this, tr("通知"), tr("保存成功"));
         return true;
     }else{
-        QMessageBox::warning(this, tr("警告"), tr("保存失败!"), QMessageBox::Ok);
+        if (paperName != "autoSavedPaper") {
+            QMessageBox::warning(this, tr("警告"), tr("保存失败!"), QMessageBox::Ok);
+        }
         return false;
     }
 }
 
-void newTestForm::autoChoose()
+bool newTestForm::autoChoose()
 {
-    if (ui->alreadySelected->toPlainText().isEmpty()) {
+    if (ui->alreadySelected->count() == 0) {
         QMessageBox::warning(this, tr("警告"), tr("已选题目数量为空，请重新选择！"), QMessageBox::Ok);
-        return ;
+        return false;
     }
     qsrand(QDateTime::currentMSecsSinceEpoch());
     QSqlQuery query;
-    QString Content = ui->alreadySelected->toPlainText();
-    QStringList rows = Content.split("\n", QString::SkipEmptyParts);
-    foreach (QString row, rows) {
-        QStringList element = row.split(":", QString::SkipEmptyParts);
-        QString subjectName = element.at(0);
-        QString questionTypeName = element.at(1);
-        QString quetionId = element.at(2);
-        quetionId.remove(tr("题"));
-        int numOfQuestion = quetionId.toInt();
+    QMap<QString , int> tolerance;
+    ui->alreadySelected->selectAll();
+    QList<QListWidgetItem*> alreadyItems = ui->alreadySelected->selectedItems();
+
+    foreach (QListWidgetItem *item, alreadyItems) {
+        QStringList things = item->text().split(":");
+        QString subjectName = things.at(0);
+        QString questionTypeName = things.at(1);
+        QString point = things.at(2);
+        QString diff = things.at(3);
+        QString quesNum = things.at(4);
+        quesNum.remove(tr("题"));
+        int num = quesNum.toInt();
+
+        QStringList point_s = getPoints(subjectName, questionTypeName);
+        //插入各个知识点许可的题目数目
+        foreach (QString pp, point_s) {
+            if (point == tr("任意知识点")) {
+                tolerance.insert(pp, 0);
+            }else{
+                tolerance.insert(pp, num);
+            }
+        }
         query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
         query.next();
 
         int maxNumOfQuestions = query.value(0).toInt();
-        if (numOfQuestion > maxNumOfQuestions) {
-            QMessageBox::warning(this, tr("警告"), tr("科目《%1》 题型“%2”没有第%3道题目！").arg(subjectName).arg(questionTypeName).arg(numOfQuestion), QMessageBox::Ok);
-            return;
+        if (num > maxNumOfQuestions) {
+            QMessageBox::warning(this, tr("警告"), tr("科目《%1》 题型“%2”没有%3道题目！").arg(subjectName).arg(questionTypeName).arg(num), QMessageBox::Ok);
+            return false;
         }
 
         int cnt = 0;
         int failCnt = 0;
-
-        do{
+        while(cnt < num){
             int id = static_cast<int>((static_cast<float> (qrand())/RAND_MAX)*(maxNumOfQuestions-1) + 1);
-            if(!query.exec(QString("SELECT * FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(id))){
+            if(!query.exec(QString("SELECT * FROM '%1_%2' WHERE id = %3 AND Point LIKE '%4' AND Difficulty LIKE '%5'").arg(subjectName).arg(questionTypeName).arg(id).arg(point).arg(diff))){
                 failCnt ++;
+                //失败太多次
                 if (failCnt > 20) {
-                    QMessageBox::warning(this, tr("警告"),tr("自动组卷失败！"), QMessageBox::Ok);
-                    return;
+                    QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
+                    return false;
                 }
                 continue;
             }
+
             query.next();
             QString QuestionPath = query.value(3).toString();
             if (QuestionPath.isEmpty()) {
                 failCnt ++;
+                //失败太多次
                 if (failCnt > 20) {
-                    QMessageBox::warning(this, tr("警告"),tr("自动组卷失败！"), QMessageBox::Ok);
-                    return;
+                    QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
+                    return false;
                 }
+                continue;
             }
             QString AnswerPath = query.value(4).toString();
             QString Point = query.value(5).toString();
@@ -162,35 +207,64 @@ void newTestForm::autoChoose()
 
             int maxIdx = questions.length();
             bool gotSame = false;
+            //查找已有的题目列表中是否有同一个题目或其他限制要求
             for (int i = 0; i < maxIdx; ++i) {
                 Question ques = questions.at(i);
-                if (((ques.getQuestionType() == questionTypeName) && (ques.getId() == id)) ||(ques.getPoint() == Point)) {
+                //有重复的题目
+                if (ques.getSubjectName() == subjectName && ques.getQuestionType() == questionTypeName && ques.getId() == id) {
                     gotSame = true;
+                    break;  // 退出for循环
                 }
             }
+
             if (gotSame) {
                 failCnt ++;
                 if (failCnt > 20) {
-                    QMessageBox::warning(this, tr("警告"),tr("自动组卷失败！"), QMessageBox::Ok);
-                    return;
+                    QMessageBox::warning(this, tr("警告"), tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
+                    return false;
                 }
-                continue;
-            }else{
-                questions.append(Question(subjectName, id, questionTypeName, QuestionPath, AnswerPath, Point, Degrade, Difficulty));
-                cnt ++;
-                failCnt = 0;
-            }
-        }while(cnt < numOfQuestion);
-    }
-    query.exec("DELETE FROM autoSavedPaper");
+                continue; //继续抽取题目
+            }else{     // 没有重复的题目
+                // 允许知识点重复的题目
+                if (tolerance[Point] != 0) {
+                    int PointCnt = tolerance[Point];
+                    PointCnt --;
+                    tolerance.remove(Point);
+                    tolerance.insert(Point, PointCnt);
+                    questions.append(Question(subjectName, id, questionTypeName, QuestionPath, AnswerPath, Point, Degrade, Difficulty));
+                    cnt ++;
+                    continue;  //继续抽取题目
+                }// end of 允许知识点重复的题目
+                else if(tolerance[Point] == 0){ //不允许知识点重复的抽题
+                    bool gotPointSame = false;
+                    for (int i = 0; i < maxIdx; ++i) {
+                        Question quest = questions.at(i);
+                        if (quest.getPoint() == Point) {//知识点有重复！
+                            gotPointSame = true;
+                            break; //退出for 循环
+                        }
 
-    int idx = 0;
-    foreach (Question q, questions) {
-        query.exec(QString("INSERT INTO autoSavedPaper VALUES( %1, '%2', '%3', %4, '%5', '%6', '%7', '%8', '%9')").arg(idx).arg(q.getSubjectName()).arg(q.getQuestionType()).arg(q.getId()).arg(q.getPoint()).arg(q.getDegrade()).arg(q.getDifficulty()).arg(q.getQuestionPath()).arg(q.getAnswerPath()));
-        idx ++;
-    }
+                    }
+                    if (gotPointSame) {
+                        failCnt ++;
+                        //失败太多次
+                        if (failCnt > 20) {
+                            QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
+                            return false;
+                        }
+                        continue; //继续抽取题目的循环
+                    }else{ // 没有同样知识点的题目
+                        questions.append(Question(subjectName, id, questionTypeName, QuestionPath, AnswerPath, Point, Degrade, Difficulty));
+                        cnt ++;
+                        continue;  //继续抽取题目
+                    }
+                } // end of 不允许知识点重复的抽题
+            } // end of 检测重复的题目
+        }  // 抽取题目的循环
+    }  // 某一行设置
 
     QMessageBox::information(this, tr("通知"), tr(" 自动抽题完成！"), QMessageBox::Ok);
+    return true;
 }
 
 bool newTestForm::checkSubjectQuestionType()
@@ -205,9 +279,24 @@ bool newTestForm::checkSubjectQuestionType()
     }
 }
 
+QStringList newTestForm::getPoints(QString subjectName, QString questionTypeName)
+{
+    QStringList Points;
+    QSqlQuery query;
+    query.exec(QString("SELECT Point FROM '%1_%2'").arg(subjectName).arg(questionTypeName));
+    Points.clear();
+    while (query.next()) {
+        QString point = query.value(0).toString();
+        if (Points.contains(point) || point == "") {
+            continue;
+        }
+        Points.append(point);
+    }
+    return Points;
+}
+
 void newTestForm::on_exitButton_clicked()
 {
-    emit contentChanged();
     close();
 }
 
@@ -239,7 +328,18 @@ void newTestForm::on_SubjectNameCB_currentIndexChanged(const QString &arg1)
 void newTestForm::on_questionTypeCB_currentIndexChanged(const QString &arg1)
 {
     QString subjectName = ui->SubjectNameCB->currentText();
+    QString questionTypeName = ui->questionTypeCB->currentText();
     questionNumRefresh();
+    points = getPoints(subjectName, questionTypeName);
+
+    ui->pointsCB->clear();
+    ui->pointsCB_2->clear();
+    ui->pointsCB->addItem(tr("任意知识点"));
+    ui->pointsCB->addItems(points);
+    ui->pointsCB->setCurrentIndex(0);
+    ui->pointsCB_2->addItem(tr("任意知识点"));
+    ui->pointsCB_2->addItems(points);
+    ui->pointsCB_2->setCurrentIndex(0);
 }
 
 void newTestForm::on_chooseThisQuestion_clicked()
@@ -277,6 +377,8 @@ void newTestForm::questionNumRefresh()
     ui->questionNumListWidget->clear();
     QString subjectName = ui->SubjectNameCB->currentText();
     QString questionTypeName = ui->questionTypeCB->currentText();
+    QString point = (ui->pointsCB->currentText() == tr("任意知识点")) ? "%" : ui->pointsCB->currentText() ;
+    QString difficulty = (ui->difficultyCB->currentText() == tr("任意难度")) ? "%" : ui->difficultyCB->currentText();
     if (subjectName.isEmpty() || questionTypeName.isEmpty() ) {
         ui->questionTextBrowser->clear();
         ui->answerTextBrowser->clear();
@@ -286,7 +388,7 @@ void newTestForm::questionNumRefresh()
         return ;
     }
 
-    if(query.exec(QString("SELECT id FROM '%1_%2' ").arg(subjectName).arg(questionTypeName))){
+    if(query.exec(QString("SELECT id FROM '%1_%2' WHERE Point LIKE '%3' AND Difficulty LIKE '%4'").arg(subjectName).arg(questionTypeName).arg(point).arg(difficulty))){
         while(query.next()){
             ui->questionNumListWidget->addItem(query.value(0).toString());
         }
@@ -378,12 +480,20 @@ void newTestForm::on_chooseMany_clicked()
 {
     QString subjectName = ui->SubjectNameCB->currentText();
     QString questionTypeName = ui->questionTypeCB->currentText();
+    QString point = ui->pointsCB_2->currentText();
+    QString difficulty = ui->difficultyCB_2->currentText();
     if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
         QMessageBox::warning(this, tr("警告"), tr("请先建立课程和题型！"), QMessageBox::Ok);
         return ;
     }
-    ui->alreadySelected->moveCursor(QTextCursor::End);
-    ui->alreadySelected->insertPlainText(tr("%1:%2:%3题\n").arg(ui->SubjectNameCB->currentText()).arg(ui->questionTypeCB->currentText()).arg(ui->questNum->text()));
+    if (ui->questNum->text() == "0") {
+        QMessageBox::warning(this, tr("警告"), tr("选择题目数量不能为0!"),QMessageBox::Ok);
+        return ;
+    }
+    QString itemtext(tr("%1:%2:%3:%4:%5题").arg(subjectName).arg(questionTypeName).arg(point).arg(difficulty).arg(ui->questNum->text()));
+    QListWidgetItem *item = new QListWidgetItem(itemtext);
+    tiaojians.append(itemtext);
+    ui->alreadySelected->addItem(item);
 }
 
 void newTestForm::on_tabWidget_currentChanged(QWidget *arg1)
@@ -400,10 +510,14 @@ void newTestForm::on_tabWidget_currentChanged(QWidget *arg1)
 void newTestForm::on_autoChooseQuestions_clicked()
 {
     if (questions.length() != 0) {
-        if(QMessageBox::information(this, tr("通知"), tr("已经有已选的试题，是否重新抽题？"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes){
+        if(QMessageBox::information(this, tr("通知"), tr("已经有已选的试题，是否清空原有试卷重新抽题？"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes){
             questions.clear();
-            autoChoose();
+            if(!autoChoose()){
+                return ;
+            }
             ui->tabWidget->setCurrentWidget(ui->alreadyTab);
+        }else{
+
         }
     }else {
         autoChoose();
@@ -419,6 +533,7 @@ void newTestForm::on_clearButton_clicked()
     ui->questionTextBrowser_2->clear();
     ui->answerTextBrowser->clear();
     ui->answerTextBrowser_2->clear();
+    tiaojians.clear();
 }
 
 void newTestForm::on_clearAlreadySelection_clicked()
@@ -462,7 +577,7 @@ void newTestForm::paperGenerate(QAxObject *docs, QList<Question> question, QStri
     if (outFileName.contains(tr("答案"))) {
         docs->dynamicCall("Add(QString)", QString("%1/answerTemplate.dot").arg(dir.absolutePath()));
     }else{
-        docs->dynamicCall("Add(QString)", QString("%1/questionTemplate.dot").arg(dir.absolutePath()));
+        docs->dynamicCall("Add(QString)", QString("%1/paperTemplate.dot").arg(dir.absolutePath()));
     }
 
     QAxObject *questionDoc = word->querySubObject("ActiveDocument");
@@ -605,6 +720,9 @@ void newTestForm::on_questionNumListWidget_currentRowChanged(int currentRow)
 {
     QString subjectName = ui->SubjectNameCB->currentText();
     QString questionTypeName = ui->questionTypeCB->currentText();
+    if (!ui->questionNumListWidget->currentItem()) {
+        return ;
+    }
     int curow = ui->questionNumListWidget->currentItem()->text().toInt();
 
     if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
@@ -651,4 +769,22 @@ void newTestForm::on_saveQuestionButton_clicked()
     }
 
     savePaper(paperName);
+}
+
+void newTestForm::on_deleteSelectedButton_clicked()
+{
+    QList<QListWidgetItem*> items = ui->alreadySelected->selectedItems();
+    if (items.length() == 0) {
+        QMessageBox::warning(this, tr("警告"), tr("请先选中要删除的条件！"), QMessageBox::Ok);
+        return ;
+    }
+
+    foreach (QListWidgetItem *item, items) {
+        tiaojians.removeOne(item->text());
+    }
+    ui->alreadySelected->clear();
+    foreach (QString tiao, tiaojians) {
+        QListWidgetItem *newItem = new QListWidgetItem(tiao);
+        ui->alreadySelected->addItem(newItem);
+    }
 }

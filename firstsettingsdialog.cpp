@@ -79,7 +79,6 @@ void FirstSettingsDialog::on_acceptButton_clicked()
     accept();
 }
 
-
 void FirstSettingsDialog::on_pushButton_clicked()
 {
     qApp->quit();

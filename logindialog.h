@@ -4,7 +4,6 @@
 #include <QDialog>
 #include <QList>
 #include <QSettings>
-
 #include "defs.h"
 
 namespace Ui {
@@ -32,7 +31,6 @@ private:
     QList<Login> Logins;
 
     void initUserPass();
-
 };
 
 #endif // LOGINDIALOG_H

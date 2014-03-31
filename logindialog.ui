@@ -91,7 +91,7 @@ p, li { white-space: pre-wrap; }
     </item>
    </layout>
   </widget>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="orgLabel">
    <property name="geometry">
     <rect>
      <x>20</x>

@@ -11,7 +11,7 @@ TEMPLATE = app
 
 CONFIG += qaxcontainer
 
-#ICON = ./images/computer.png
+ICON = ./images/computer.png
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -43,10 +43,7 @@ FORMS    += mainwindow.ui \
 OTHER_FILES += \
     ReadMe.txt \
     logo.rc \
-    favicon.ico \
-    question.sql \
-    paper.sql \
-    subject.sql
+    favicon.ico
 
 RESOURCES += \
     res.qrc

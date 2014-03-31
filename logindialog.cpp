@@ -5,6 +5,8 @@
 #include <QCryptographicHash>   //加密函数库
 
 #include "firstsettingsdialog.h"
+#include "QTextCodec"
+#include <QDebug>
 
 LoginDialog::LoginDialog(QWidget *parent) :
     QDialog(parent),
@@ -13,6 +15,18 @@ LoginDialog::LoginDialog(QWidget *parent) :
     ui->setupUi(this);
 
     readSettings();     //读取保存的用户名和密码
+
+    QSettings settings("app.ini", QSettings::IniFormat);
+
+    settings.setIniCodec(QTextCodec::codecForName("GB2312"));
+
+    QString strOrgName = settings.value("orgName").toString();
+    ui->orgLabel->setText(strOrgName);
+
+
+    int strLength = strOrgName.length()*20;
+    ui->orgLabel->setMaximumWidth(strLength);
+    ui->orgLabel->setFont(QFont(tr("楷体"), 16));
 
     //设置密码输入框显示*
     ui->passEdit->setEchoMode(QLineEdit::Password);

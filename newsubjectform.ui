@@ -318,7 +318,7 @@
    </widget>
    <widget class="QWidget" name="tab_3">
     <attribute name="title">
-     <string>编辑试题</string>
+     <string>修改试题</string>
     </attribute>
     <widget class="QTextBrowser" name="questionBrowser">
      <property name="geometry">

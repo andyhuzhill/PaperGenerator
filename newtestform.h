@@ -22,20 +22,21 @@ public:
     explicit newTestForm(QWidget *parent = 0);
     ~newTestForm();
 
-    void questionNumRefresh();
-
     void closeEvent(QCloseEvent *);
 
     void setPaperName(QString paperName);
 
     bool savePaper(QString paperName);
 
-    void autoChoose();
+    bool autoChoose();
     bool checkSubjectQuestionType();
+    QStringList getPoints(QString subjectName, QString questionTypeName);
 signals:
     void contentChanged();
 
 private slots:
+    void questionNumRefresh();
+
     void on_exitButton_clicked();
 
     void on_SubjectNameCB_currentIndexChanged(const QString &arg1);
@@ -70,10 +71,14 @@ private slots:
 
     void on_saveQuestionButton_clicked();
 
+    void on_deleteSelectedButton_clicked();
+
 private:
     Ui::newTestForm *ui;
     QAxWidget *word;
     QList<Question> questions;
+    QStringList points;
+    QStringList tiaojians;
 };
 
 #endif // NEWTESTFORM_H
