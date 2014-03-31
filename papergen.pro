@@ -6,7 +6,7 @@
 
 QT       += core gui sql
 
-TARGET = chouti
+TARGET = papergen
 TEMPLATE = app
 
 CONFIG += qaxcontainer

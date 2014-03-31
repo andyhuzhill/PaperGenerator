@@ -49,7 +49,7 @@ newSubjectForm::newSubjectForm(QWidget *parent) :
     questionLibraryPath.replace("\\","/");
 
     questionNumRefresh();
-    modifyWhich = 0;
+    modifyWhich = EMod_None;
 }
 
 newSubjectForm::~newSubjectForm()
@@ -62,7 +62,16 @@ void newSubjectForm::closeEvent(QCloseEvent *)
     emit contentChanged();
 }
 
-void newSubjectForm::imgParser(QString &html, QString QorA, QString outPath)
+/** @brief 将HTML字符串中的图片提取出来
+ *
+ *  程序中利用了Word复制到剪贴板时产生的HTML文件，\n
+ *  需要将HTML中的图片提取出来单独保存。
+ *
+ *  @param INOUT QString &html Word产生的HTML文件
+ *  @param QString  QorA       这是题目还是答案产生的HTML文件?
+ *  @param QString  saveToPath 将图片保存到路径
+ */
+void newSubjectForm::extractImage(QString &html, QString QorA, QString saveToPath)
 {
     html.replace(QString("\\"), QString("/"));
     html.remove("file:///");
@@ -73,6 +82,7 @@ void newSubjectForm::imgParser(QString &html, QString QorA, QString outPath)
     int startidx = 0;
     int endidx = 0;
 
+    /** 首先记录下每个公式 标签的开始和结束 */
     while((startidx = html.indexOf("<!--[if gte vml 1]>",startidx)) != -1){
         start.prepend(startidx);
         startidx ++;
@@ -81,6 +91,7 @@ void newSubjectForm::imgParser(QString &html, QString QorA, QString outPath)
         }
     }
 
+    /** 然后删除公式 */
     for (int i = 0; i < start.length(); ++i) {
         html.remove(start.at(i), end.at(i)-start.at(i)+12);
     }
@@ -88,26 +99,30 @@ void newSubjectForm::imgParser(QString &html, QString QorA, QString outPath)
     start.clear();
     startidx = 0;
 
+    /** 记录下图片的开始标签位置 */
     while((startidx = html.indexOf("<img", startidx)) != -1){
         start.prepend(startidx);
         startidx ++;
     }
 
+    /** 将图片的原地址替换为新地址，并将图片保存到新地址 */
     for (int i = 0; i < start.length(); ++i) {
         int srcStart = html.indexOf("src=\"", start.at(i))+5;
         int srcEnd = html.indexOf("\"",srcStart);
         srcEnd = html.indexOf("\"", srcEnd);
+
         QString imgOriginalPath = html.mid(srcStart,srcEnd-srcStart);
 
         QFile imgfile(imgOriginalPath);
         QFileInfo imgFileInfo(imgOriginalPath);
-        QString imgFinalPath = QString("%1/%2%3.%4").arg(outPath).arg(QorA).arg(i).arg(imgFileInfo.completeSuffix());
+        QString imgFinalPath = QString("%1/%2%3.%4").arg(saveToPath).arg(QorA).arg(i).arg(imgFileInfo.completeSuffix());
         imgfile.copy(imgFinalPath);
 
         html.replace(imgOriginalPath, imgFinalPath);
     }
 }
 
+/** @brief 新建一个科目 */
 void newSubjectForm::on_newSubjectButton_clicked()
 {
     QString subjectName = ui->SubjectNameEdit->text().trimmed();
@@ -115,6 +130,7 @@ void newSubjectForm::on_newSubjectButton_clicked()
         QMessageBox::warning(this, tr("警告"), tr("课程名称不能为空！"), QMessageBox::Ok);
         return ;
     }
+
     ui->SubjectNameEdit->setText(subjectName);
 
     QSqlQuery query;
@@ -127,6 +143,7 @@ void newSubjectForm::on_newSubjectButton_clicked()
             QMessageBox::warning(this, tr("警告"), tr("数据库中已存在课程《%1》,请重新输入一个课程名！").arg(subjectName), QMessageBox::Ok);
             return ;
         }
+        qDebug() << query.value(0).toString();
         i++;
     }
 
@@ -141,7 +158,12 @@ void newSubjectForm::on_newSubjectButton_clicked()
                                "\"%2\","
                                "0)"
                                ).arg(i+1).arg(subjectName);
-    if (query.exec(createSubjectCmd) && query.exec(insertSubjectCmd)) {
+    bool createSubjectResult = query.exec(createSubjectCmd);
+    bool insertSubjectResult = query.exec(insertSubjectCmd);
+    qDebug() << "creaet:" << createSubjectResult ;
+    qDebug() << "insert:" << insertSubjectResult;
+
+    if (createSubjectResult && insertSubjectResult) {
         QMessageBox::information(this, tr("通知"), tr("课程数据库创建成功！"), QMessageBox::Ok);
         QDir dir(questionLibraryPath);
         dir.mkdir(subjectName);
@@ -154,6 +176,7 @@ void newSubjectForm::on_newSubjectButton_clicked()
     }
 }
 
+/** @brief 新建一个题目类型  */
 void newSubjectForm::on_newTypeButton_clicked()
 {
     QString questionType = ui->questionTypeEdit->text().trimmed();
@@ -162,6 +185,7 @@ void newSubjectForm::on_newTypeButton_clicked()
         QMessageBox::warning(this, tr("警告"), tr("题目类型不得为空！"), QMessageBox::Ok);
         return ;
     }
+
     QString subjectName = ui->SubjectNameEdit->text().trimmed();
     if (subjectName.isEmpty()) {
         QMessageBox::warning(this, tr("警告"), tr("课程名称不能为空！"), QMessageBox::Ok);
@@ -188,7 +212,6 @@ void newSubjectForm::on_newTypeButton_clicked()
                                     "%4)"
                                     ).arg(subjectName).arg(i+1).arg(questionType).arg(0);
 
-
     QString insertQuestionTypeTableCmd;
     insertQuestionTypeTableCmd = QString("CREATE TABLE '%1_%2'("
                                          "id integer,"
@@ -200,10 +223,10 @@ void newSubjectForm::on_newTypeButton_clicked()
                                          "Difficulty,"
                                          "degrade)").arg(subjectName).arg(questionType);
 
-    bool status1 = query.exec(insertQuestionTypeCmd);
-    bool status2 = query.exec(insertQuestionTypeTableCmd);
+    bool insertQusTypeResult = query.exec(insertQuestionTypeCmd);
+    bool insertQusTypeIntoTableResult = query.exec(insertQuestionTypeTableCmd);
 
-    if (status1 && status2) {
+    if (insertQusTypeResult && insertQusTypeIntoTableResult) {
         QMessageBox::information(this, tr("通知"), tr("题目类型插入完毕。"), QMessageBox::Ok);
         questionTypeListRefresh(subjectName);
 
@@ -236,12 +259,11 @@ void newSubjectForm::questionTypeListRefresh(QString subject)
     ui->questionTypeList->clear();
     ui->questionTypesCB->clear();
     ui->quesTypeCB2->clear();
+
     if (query.value(0).toString() == subject) {
         query.exec(QString("SELECT questionTypes FROM \"%1\"").arg(subject));
         while (query.next()) {
             QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
-            //            item->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-            //            item->setCheckState(Qt::Unchecked);
             ui->questionTypeList->addItem(item);
             ui->questionTypesCB->addItem(item->text());
             ui->quesTypeCB2->addItem(item->text());
@@ -344,17 +366,16 @@ void newSubjectForm::on_deleteSelectedType_clicked()
     QSqlQuery query;
 
     foreach (QListWidgetItem *item, selectedQuestionTypes) {
-        bool status1 = query.exec(QString("DELETE FROM '%1' where questionTypes = '%2'").arg( subjectName ).arg(item->text()));
-        bool status2 = query.exec(QString("DROP TABLE '%1_%2'").arg(subjectName).arg(item->text()));
+        bool deleteQuestionTypeResult = query.exec(QString("DELETE FROM '%1' where questionTypes = '%2'").arg( subjectName ).arg(item->text()));
+        bool dropTableResult = query.exec(QString("DROP TABLE '%1_%2'").arg(subjectName).arg(item->text()));
 
-        if (status1 && status2) {
-
-        }else{
+        if (!deleteQuestionTypeResult && !dropTableResult) {
             QMessageBox::warning(this, tr("警告"), tr("题目类型删除失败！"),QMessageBox::Ok);
             questionTypeListRefresh(subjectName);
             return ;
         }
     }
+
     QMessageBox::information(this, tr("信息"), tr("题目类型删除成功！"),QMessageBox::Ok);
     questionTypeListRefresh(subjectName);
 }
@@ -508,8 +529,8 @@ void newSubjectForm::on_startInputMany_clicked()
         QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
         return ;
     }
-    word->setProperty("Visible", false);    //隐藏word程序
-    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+    word->setProperty("Visible", false);        //隐藏word程序
+    word->setProperty("DisplayAlerts", false);  //不显示任何警告信息
 
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {
@@ -650,7 +671,7 @@ void newSubjectForm::on_changeButton_clicked()
         const QMimeData *dat;
         QAxObject *active_doc;
         switch(modifyWhich){
-        case 1:
+        case EMod_Question:
             query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
             query.next();
             docs->dynamicCall("Open(QString)", query.value(0).toString());
@@ -670,13 +691,13 @@ void newSubjectForm::on_changeButton_clicked()
                 QString html = dat->html();
                 query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
                 QString outPath = query.value(0).toString().remove("Answer.doc");
-                imgParser(html, "Question", outPath);
+                extractImage(html, "Question", outPath);
                 html.replace("\"","'");
                 query.exec(QString("UPDATE '%1_%2' SET Question = \"%3\" WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(html).arg(ui->questNumCB->text().toInt()));
             }
             clip->clear();
             break;
-        case 2:
+        case EMod_Answer:
             query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
             query.next();
             docs->dynamicCall("Open(QString)", query.value(0).toString());
@@ -697,7 +718,7 @@ void newSubjectForm::on_changeButton_clicked()
                 query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
                 query.next();
                 QString outPath = query.value(0).toString().remove("Answer.doc");
-                imgParser(html, "Answer", outPath);
+                extractImage(html, "Answer", outPath);
                 html.replace("\"","'");
                 query.exec(QString("UPDATE '%1_%2' SET Answer = \"%3\" WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(html).arg(ui->questNumCB->text().toInt()));
             }
@@ -723,7 +744,7 @@ void newSubjectForm::on_changeButton_clicked()
                 QString html = dat->html();
                 query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
                 QString outPath = query.value(0).toString().remove("Answer.doc");
-                imgParser(html, "Question", outPath);
+                extractImage(html, "Question", outPath);
                 html.replace("\"","'");
                 query.exec(QString("UPDATE '%1_%2' SET Question = \"%3\" WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(html).arg(ui->questNumCB->text().toInt()));
             }
@@ -749,7 +770,7 @@ void newSubjectForm::on_changeButton_clicked()
                 query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
                 query.next();
                 QString outPath = query.value(0).toString().remove("Answer.doc");
-                imgParser(html, "Answer", outPath);
+                extractImage(html, "Answer", outPath);
                 html.replace("\"","'");
                 query.exec(QString("UPDATE '%1_%2' SET Answer = \"%3\" WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(html).arg(ui->questNumCB->text().toInt()));
             }
@@ -768,18 +789,19 @@ void newSubjectForm::on_changeButton_clicked()
         return ;
     }
 
-    QString degrade = ui->degradeEdit->text().trimmed();
-    QString difficulty = ui->difficultyEdit->text().trimmed();
-    QString point = ui->pointEdit->toPlainText();
+    QString strDegrade = ui->degradeEdit->text().trimmed();
+    QString strDifficulty = ui->difficultyEdit->text().trimmed();
+    QString strPoint = ui->pointEdit->toPlainText();
 
-    bool status1 = query.exec(QString("UPDATE '%1_%2' SET Degrade = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(degrade).arg(ui->questNumCB->text().toInt()));
-    bool status2 = query.exec(QString("UPDATE '%1_%2' SET Point = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(point).arg(ui->questNumCB->text().toInt()));
-    bool status3 = query.exec(QString("UPDATE '%1_%2' SET Difficulty = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(difficulty).arg(ui->questNumCB->text().toInt()));
+    bool updateDegradeResult = query.exec(QString("UPDATE '%1_%2' SET Degrade = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(strDegrade).arg(ui->questNumCB->text().toInt()));
+    bool updatePointResult = query.exec(QString("UPDATE '%1_%2' SET Point = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(strPoint).arg(ui->questNumCB->text().toInt()));
+    bool updateDifficultyResult = query.exec(QString("UPDATE '%1_%2' SET Difficulty = '%3' WHERE id = %4").arg(subjectName).arg(questionTypeName).arg(strDifficulty).arg(ui->questNumCB->text().toInt()));
 
-    if (status1 && status2 && status3) {
+    if (updateDegradeResult && updatePointResult && updateDifficultyResult) {
         QMessageBox::information(this, tr("通知"), tr("修改试题成功！"), QMessageBox::Ok);
         on_questNumCB_valueChanged(ui->questNumCB->text().toInt());
-        modifyWhich = 0;
+
+        modifyWhich = EMod_None;
     }else{
         QMessageBox::warning(this, tr("警告"), tr("修改试题失败！"), QMessageBox::Ok);
     }
@@ -916,10 +938,18 @@ void newSubjectForm::modifyQA(QString QorA)
     QSqlQuery query;
     if (QorA == "Question") {
         query.exec(QString("SELECT QuestionDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
-        modifyWhich += 1;
+        if (modifyWhich != EMod_Answer) {
+            modifyWhich = EMod_Question;
+        }else{
+            modifyWhich = EMod_QandA;
+        }
     }else{
         query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questNumCB->text().toInt()));
-        modifyWhich += 2;
+        if (modifyWhich != EMod_Question) {
+            modifyWhich = EMod_Answer;
+        }else{
+            modifyWhich = EMod_QandA;
+        }
     }
     query.next();
     QString docPath = query.value(0).toString();

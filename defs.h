@@ -9,6 +9,6 @@ struct Login{
     QString passwd;
 };
 
-const QString wordAppName="Word.Application";
+const QString wordAppName="Wps.Application";
 
 #endif // DEFS_H

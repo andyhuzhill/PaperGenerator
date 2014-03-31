@@ -8,6 +8,14 @@ class QAxWidget;
 namespace Ui {
 class newSubjectForm;
 }
+/** @enum 枚举 修改的是问题、答案或两者都有或其他 */
+enum EnumModified{
+    EMod_None,
+    EMod_Question,
+    EMod_Answer,
+    EMod_QandA,
+    EMod_Other
+};
 
 class newSubjectForm : public QWidget
 {
@@ -17,7 +25,7 @@ public:
     explicit newSubjectForm(QWidget *parent = 0);
     ~newSubjectForm();
 
-    void imgParser(QString &html, QString QorA, QString outPath);
+    void extractImage(QString &html, QString QorA, QString outPath);
 
     void closeEvent(QCloseEvent *);
 
@@ -86,7 +94,7 @@ private:
 
     QAxWidget *word;
 
-    int modifyWhich;
+    EnumModified modifyWhich;    /**< 修改了问题、答案或者是两者都有被修改 */
 
     QString questionLibraryPath;
 };

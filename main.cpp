@@ -8,6 +8,10 @@
 
 #include <iostream>
 
+/** @brief 连接数据库
+ *
+ *  @return 返回 true 成功连接到数据库 false 没有连接到数据库
+ */
 bool connect2Database()
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
@@ -24,26 +28,36 @@ bool connect2Database()
 
 int main(int argc, char *argv[])
 {
-    QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
-    QTextCodec::setCodecForLocale(QTextCodec::codecForLocale());
-    QTextCodec::setCodecForTr(QTextCodec::codecForName("utf-8"));  //解决中文编码问题
-    QTranslator translator;
-    translator.load(":/lang/qt_zh_CN.qm");      //载入对话框的汉化文件
-
     QApplication app(argc, argv);
-    app.installTranslator(&translator);           //汉化对话框
+
+    /** 载入对话框的汉化文件 */
+    QTranslator translator;
+    translator.load(":/lang/qt_zh_CN.qm");
+
+    /** 汉化对话框 */
+    app.installTranslator(&translator);
 
     QApplication::addLibraryPath("./plugins");
+
+    /** 解决中文编码问题 */
+    QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
+    QTextCodec::setCodecForLocale(QTextCodec::codecForLocale());
+    QTextCodec::setCodecForTr(QTextCodec::codecForName("utf-8"));
 
     if (!connect2Database()) {
         return -1;
     }
 
-    LoginDialog login;        //登陆窗口
-    if (login.exec() == QDialog::Accepted) {
+    /** 登陆窗口 */
+    LoginDialog loginDialog;
+    if (loginDialog.exec() == QDialog::Accepted) {
         MainWindow w;
+
+        /** 禁用窗口最大化按钮 */
         w.setWindowFlags(w.windowFlags() & ~Qt::WindowMaximizeButtonHint);
-        w.show();           //只有在登陆验证通过后才显示主窗口
+
+        /** 只有在登陆验证通过后才显示主窗口 */
+        w.show();
 
         return app.exec();
     }

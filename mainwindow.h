@@ -52,7 +52,6 @@ private:
     QAction *modifyAction;
 
     QAction *helpAction;
-//    QAction *aboutAction;
     QAction *aboutQtAction;
 
     QMenu *fileMenu;

@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     createActions();
     createMenus();
-    createToolBars();
+    //    createToolBars();
 
     textViewRefresh();
     connect(ui->newTestButton, SIGNAL(clicked()), this, SLOT(newTest()));
@@ -38,6 +38,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+/** @brief 新建一套试卷 */
 void MainWindow::newTest()
 {
     testForm = new newTestForm();
@@ -47,6 +48,7 @@ void MainWindow::newTest()
     connect(testForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
 }
 
+/** @brief 管理试题库 */
 void MainWindow::manageSubject()
 {
     subjectForm = new newSubjectForm();
@@ -56,6 +58,7 @@ void MainWindow::manageSubject()
     connect(subjectForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
 }
 
+/** @brief  管理用户及密码 */
 void MainWindow::manageUser()
 {
     userForm = new manageUserForm();
@@ -128,6 +131,7 @@ void MainWindow::closeEvent(QCloseEvent *)
     qApp->quit();
 }
 
+/** @brief 创建一系列操作以及设置操作的快捷键 */
 void MainWindow::createActions()
 {
     newTestAction = new QAction(QIcon(":/images/new.png"),tr("新建试卷"), this);
@@ -149,9 +153,6 @@ void MainWindow::createActions()
     quitAction->setShortcut(tr("Ctrl+Q"));
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
 
-    //    aboutAction = new QAction(tr("关于本程序"), this);
-    //    connect(aboutAction, SIGNAL(triggered()), this, SLOT(about()));
-
     helpAction = new QAction(tr("帮助文档"), this);
     helpAction->setShortcut(QKeySequence::HelpContents);
     connect(helpAction, SIGNAL(triggered()), this, SLOT(help()));
@@ -160,6 +161,7 @@ void MainWindow::createActions()
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 }
 
+/** @brief 创建主菜单  */
 void MainWindow::createMenus()
 {
     fileMenu = ui->menuBar->addMenu(tr("开始工作"));
@@ -172,31 +174,34 @@ void MainWindow::createMenus()
     helpMenu = ui->menuBar->addMenu(tr("帮助信息"));
     helpMenu->addAction(helpAction);
     helpMenu->addSeparator();
-    //    helpMenu->addAction(aboutAction);
     helpMenu->addAction(aboutQtAction);
 }
 
+/** @brief 创建工具栏  */
 void MainWindow::createToolBars()
 {
-    //    ui->mainToolBar->addAction(newTestAction);
-    //    ui->mainToolBar->addAction(manageSubjectAction);
+//    ui->mainToolBar->addAction(newTestAction);
+//    ui->mainToolBar->addAction(manageSubjectAction);
 }
 
-
-
+/** @brief 双击试卷列表时 跳到该试卷 */
 void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 {
     testForm = new newTestForm();
     testForm->setWindowFlags(testForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
-    if (item->text() == tr("自动保存试卷")) {
+
+    if (item->text() == tr("自动保存的试卷")) {
         testForm->setPaperName("autoSavedPaper");
     }else{
         testForm->setPaperName(item->text());
     }
+
     testForm->show();
+
     connect(testForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
 }
 
+/** @brief 删除选定的试卷  */
 void MainWindow::on_deleteSelectPaper_clicked()
 {
     QSqlQuery query;
@@ -205,13 +210,16 @@ void MainWindow::on_deleteSelectPaper_clicked()
         QMessageBox::warning(this, tr("警告"), tr("请先选中要删除的试卷名称!"), QMessageBox::Ok);
         return ;
     }
+
     foreach (QListWidgetItem *item, selectedPaper) {
-        if (item->text() == "autoSavedPaper") {
+        if (item->text() == tr("自动保存的试卷")) {
             QMessageBox::information(this, tr("通知"), tr("自动保存的试卷无法删除"), QMessageBox::Ok);
             continue;
         }
+
         bool status1 = query.exec(QString("DROP TABLE '%1_Paper'").arg(item->text()));
         bool status2 = query.exec(QString("DELETE FROM savedPaper where paperName = '%1'").arg(item->text()));
+
         if (!status1 || !status2) {
             QMessageBox::warning(this, tr("警告"), tr("无法删除试卷<%1>").arg(item->text()));
             return;
