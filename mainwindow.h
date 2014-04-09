@@ -5,6 +5,10 @@
 
 #include <ActiveQt/QAxWidget>
 
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+
 class QAction;
 class newSubjectForm;
 class newTestForm;
@@ -38,11 +42,17 @@ private slots:
 
     void on_deleteSelectPaper_clicked();
 
+    void onCheckUpdate();
+
 private:
     Ui::MainWindow *ui;
     void createActions();
     void createMenus();
     void createToolBars();
+
+    void checkUpdate();
+
+    void showUpdate();
 
 
     QAction *newTestAction;
@@ -64,6 +74,9 @@ private:
 
     QAxWidget *word;
     QString paperPath;
+
+    QNetworkAccessManager *manager;
+    QNetworkReply         *reply;
 };
 
 #endif // MAINWINDOW_H

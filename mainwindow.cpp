@@ -13,6 +13,9 @@
 #include <newtestform.h>
 #include <manageuserform.h>
 
+#include <QSslConfiguration>
+#include <QFile>
+
 #include <iostream>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -31,6 +34,12 @@ MainWindow::MainWindow(QWidget *parent) :
     textViewRefresh();
     connect(ui->newTestButton, SIGNAL(clicked()), this, SLOT(newTest()));
     connect(ui->manageQuestionButton, SIGNAL(clicked()), this, SLOT(manageSubject()));
+
+    manager = new QNetworkAccessManager(this);
+
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onCheckUpdate()));
+
+    checkUpdate();
 }
 
 MainWindow::~MainWindow()
@@ -181,7 +190,20 @@ void MainWindow::createMenus()
 void MainWindow::createToolBars()
 {
 //    ui->mainToolBar->addAction(newTestAction);
-//    ui->mainToolBar->addAction(manageSubjectAction);
+    //    ui->mainToolBar->addAction(manageSubjectAction);
+}
+
+void MainWindow::checkUpdate()
+{
+    QNetworkRequest request;
+
+    request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
+
+    request.setUrl(QUrl("https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/VERSION"));
+
+    reply = manager->get(request);
+
+    reply->ignoreSslErrors();
 }
 
 /** @brief 双击试卷列表时 跳到该试卷 */
@@ -228,3 +250,46 @@ void MainWindow::on_deleteSelectPaper_clicked()
 
     textViewRefresh();
 }
+
+
+void MainWindow::showUpdate()
+{
+     QMessageBox::information(this, tr("有更新可用"), tr("您好,本程序有更新的版本可用。请到如下地址下载最新版本安装：<br><a href='https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe'>https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe</a>"));
+
+}
+
+void MainWindow::onCheckUpdate()
+{
+    QString Version = QString::fromUtf8(reply->readAll());
+
+    int Major = Version.split(".").at(0).toInt();
+
+    int Minor = Version.split(".").at(1).toInt();
+
+    int Min   = Version.split(".").at(2).toInt();
+
+    QFile currentVersionFile("VERSION");
+    if (!currentVersionFile.open(QFile::ReadOnly)) {
+        return ;
+    }
+
+    QString currentVersion = currentVersionFile.readAll();
+
+    int curMajor = currentVersion.split(".").at(0).toInt();
+
+    int curMinor = currentVersion.split(".").at(1).toInt();
+
+    int curMin   = currentVersion.split(".").at(2).toInt();
+
+    if ((curMajor < Major)
+            ||(curMinor < Minor)
+            ||(curMin  < Min)
+            ){
+        showUpdate();
+    }
+
+    currentVersionFile.close();
+}
+
+
+

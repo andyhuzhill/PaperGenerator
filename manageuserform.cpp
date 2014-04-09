@@ -99,6 +99,15 @@ void manageUserForm::on_addUserButton_clicked()
 
     if (!same) {
         Logins.append(log);
+
+        settings->beginWriteArray("logins");
+        for (int i = 0; i <  Logins.size() ; ++i) {
+            settings->setArrayIndex(i);
+            settings->setValue("name", Logins.at(i).name);
+            settings->setValue("pass", Logins.at(i).passwd);
+        }
+        settings->endArray();
+
         ui->UserLists->addItem(log.name);
     }
 }
