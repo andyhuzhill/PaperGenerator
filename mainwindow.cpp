@@ -31,6 +31,10 @@ MainWindow::MainWindow(QWidget *parent) :
     createMenus();
     //    createToolBars();
 
+    ui->subjectsView->setColumnCount(3);
+    ui->subjectsView->setHeaderLabels(QStringList() << tr("课程名") << tr("题型") << tr("题目数量"));
+    ui->subjectsView->setIconSize(QSize(60,60));
+
     textViewRefresh();
     connect(ui->newTestButton, SIGNAL(clicked()), this, SLOT(newTest()));
     connect(ui->manageQuestionButton, SIGNAL(clicked()), this, SLOT(manageSubject()));
@@ -101,24 +105,26 @@ void MainWindow::help()
 
 void MainWindow::textViewRefresh()
 {
-    ui->textBrowser->clear();
+    ui->subjectsView->clear();
     ui->listWidget->clear();
-
-    ui->textBrowser->insertPlainText(tr("课程名称       题目类型        题目数量\n"));
-    ui->textBrowser->insertPlainText("==========================================\n");
 
     QSqlQuery query;
     query.exec("SELECT subjectName FROM subjects");
-    QStringList subjectNames;
+    QTreeWidgetItem *item = NULL;
+    QList<QTreeWidgetItem*> itemList;
+
     while(query.next()){
-        subjectNames.append(query.value(0).toString());
+        item = new QTreeWidgetItem(ui->subjectsView);
+        item->setText(0, query.value(0).toString());
+        itemList.append(item);
     }
 
-    foreach (QString subject, subjectNames) {
-        ui->textBrowser->insertPlainText(tr("%1\n").arg(subject));
-        query.exec(QString("SELECT questionTypes, numOfQuestions FROM '%1'").arg(subject));
+    foreach (QTreeWidgetItem *it, itemList) {
+        query.exec(QString("SELECT questionTypes, numOfQuestions FROM '%1'").arg(it->text(0)));
         while(query.next()){
-            ui->textBrowser->insertPlainText(tr("              %1             %2\n").arg(query.value(0).toString()).arg(query.value(1).toInt()));
+            QTreeWidgetItem *childItem = new QTreeWidgetItem(it);
+            childItem->setText(1, query.value(0).toString());
+            childItem->setText(2, query.value(1).toString());
         }
     }
 

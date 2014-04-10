@@ -37,7 +37,6 @@ private slots:
 
     void on_newTypeButton_clicked();
 
-    void on_SubjectNameEdit_textChanged(const QString &arg1);
 
     void on_subjectsListsView_currentTextChanged(const QString &currentText);
 

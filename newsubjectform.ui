@@ -29,59 +29,7 @@
     <attribute name="title">
      <string>课程信息</string>
     </attribute>
-    <widget class="QWidget" name="layoutWidget">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>20</y>
-       <width>701</width>
-       <height>30</height>
-      </rect>
-     </property>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QLabel" name="subjectNameLabel">
-        <property name="text">
-         <string>课程名称：</string>
-        </property>
-        <property name="buddy">
-         <cstring>SubjectNameEdit</cstring>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="SubjectNameEdit"/>
-      </item>
-      <item>
-       <widget class="QPushButton" name="newSubjectButton">
-        <property name="text">
-         <string>新建课程</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="questionTypeLabel">
-        <property name="text">
-         <string>题目类型：</string>
-        </property>
-        <property name="buddy">
-         <cstring>questionTypeEdit</cstring>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLineEdit" name="questionTypeEdit"/>
-      </item>
-      <item>
-       <widget class="QPushButton" name="newTypeButton">
-        <property name="text">
-         <string>新建题型</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="layoutWidget2">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -141,6 +89,32 @@
       </item>
      </layout>
     </widget>
+    <widget class="QPushButton" name="newSubjectButton">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>10</y>
+       <width>261</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>新建课程</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="newTypeButton">
+     <property name="geometry">
+      <rect>
+       <x>370</x>
+       <y>10</y>
+       <width>261</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>新建题型</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
@@ -171,7 +145,7 @@
        <string>文件名：</string>
       </property>
      </widget>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QWidget" name="layoutWidget3">
       <property name="geometry">
        <rect>
         <x>20</x>
@@ -213,7 +187,7 @@
      <property name="title">
       <string>批量录入已有试题：</string>
      </property>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QWidget" name="layoutWidget4">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -257,7 +231,7 @@
       </layout>
      </widget>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="layoutWidget5">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -352,7 +326,7 @@
      <property name="title">
       <string> 可编辑区：</string>
      </property>
-     <widget class="QWidget" name="layoutWidget">
+     <widget class="QWidget" name="layoutWidget6">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -462,7 +436,7 @@
       <string>删除该题</string>
      </property>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="layoutWidget7">
      <property name="geometry">
       <rect>
        <x>10</x>

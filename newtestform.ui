@@ -26,7 +26,7 @@
     <string>返回</string>
    </property>
   </widget>
-  <widget class="QWidget" name="layoutWidget">
+  <widget class="QWidget" name="layoutWidget1">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -74,7 +74,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="manualTab">
     <attribute name="title">
@@ -165,7 +165,7 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="layoutWidget2">
      <property name="geometry">
       <rect>
        <x>0</x>
@@ -228,7 +228,7 @@
       <string>题号列表:</string>
      </property>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="layoutWidget3">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -304,7 +304,7 @@
       <string>清空选择的条件</string>
      </property>
     </widget>
-    <widget class="QWidget" name="layoutWidget">
+    <widget class="QWidget" name="layoutWidget4">
      <property name="geometry">
       <rect>
        <x>40</x>
@@ -387,9 +387,9 @@
       <string>删除选择的条件</string>
      </property>
     </widget>
+    <zorder>layoutWidget4</zorder>
     <zorder>label_9</zorder>
     <zorder>autoChooseQuestions</zorder>
-    <zorder>layoutWidget</zorder>
     <zorder>clearButton</zorder>
     <zorder>alreadySelected</zorder>
     <zorder>deleteSelectedButton</zorder>

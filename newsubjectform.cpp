@@ -18,6 +18,7 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <QList>
+#include <QInputDialog>
 #include "defs.h"
 
 newSubjectForm::newSubjectForm(QWidget *parent) :
@@ -125,13 +126,16 @@ void newSubjectForm::extractImage(QString &html, QString QorA, QString saveToPat
 /** @brief 新建一个科目 */
 void newSubjectForm::on_newSubjectButton_clicked()
 {
-    QString subjectName = ui->SubjectNameEdit->text().trimmed();
+    bool ok;
+
+    QString subjectName = QInputDialog::getText(this, tr("请输入课程名称"), tr(""), QLineEdit::Normal, "", &ok);
+    if(!ok){
+        return ;
+    }
     if (subjectName.isEmpty()) {
         QMessageBox::warning(this, tr("警告"), tr("课程名称不能为空！"), QMessageBox::Ok);
         return ;
     }
-
-    ui->SubjectNameEdit->setText(subjectName);
 
     QSqlQuery query;
 
@@ -179,18 +183,27 @@ void newSubjectForm::on_newSubjectButton_clicked()
 /** @brief 新建一个题目类型  */
 void newSubjectForm::on_newTypeButton_clicked()
 {
-    QString questionType = ui->questionTypeEdit->text().trimmed();
+    bool ok;
+    QString questionType = QInputDialog::getText(this, tr("请输入题目类型名称："), tr(""), QLineEdit::Normal, "", &ok);
 
+    if (!ok) {
+        return ;
+    }
     if (questionType.isEmpty()) {
         QMessageBox::warning(this, tr("警告"), tr("题目类型不得为空！"), QMessageBox::Ok);
         return ;
     }
 
-    QString subjectName = ui->SubjectNameEdit->text().trimmed();
-    if (subjectName.isEmpty()) {
-        QMessageBox::warning(this, tr("警告"), tr("课程名称不能为空！"), QMessageBox::Ok);
+//    QString subjectName = ui->SubjectNameEdit->text().trimmed();
+//    QString subjectName = ui->subjectsListsView->selectedItems();
+    QList<QListWidgetItem*> selectedSubjects = ui->subjectsListsView->selectedItems();
+
+    if (selectedSubjects.count() == 0) {
+        QMessageBox::warning(this, tr("警告"), tr("请先选中课程！"), QMessageBox::Ok);
         return ;
     }
+
+    QString subjectName = selectedSubjects.at(0)->text();
 
     QSqlQuery query;
 
@@ -236,12 +249,6 @@ void newSubjectForm::on_newTypeButton_clicked()
     }else{
         QMessageBox::warning(this, tr("警告"), tr("题目类型插入失败！"), QMessageBox::Ok);
     }
-}
-
-void newSubjectForm::on_SubjectNameEdit_textChanged(const QString &arg1)
-{
-    (void)arg1;
-    questionTypeListRefresh(ui->SubjectNameEdit->text().trimmed());
 }
 
 void newSubjectForm::questionTypeListRefresh(QString subject)
@@ -291,12 +298,14 @@ void newSubjectForm::subjectListRefresh()
 void newSubjectForm::on_subjectsListsView_currentTextChanged(const QString &currentText)
 {
     questionTypeListRefresh(currentText);
-    ui->SubjectNameEdit->setText(currentText);
+    ui->questionTypesLabel->setText(tr("科目《%1》题型列表：").arg(currentText));
 }
 
 void newSubjectForm::on_questionTypeList_currentTextChanged(const QString &currentText)
 {
-    ui->questionTypeEdit->setText(currentText);
+    (void)currentText;
+
+//    ui->questionTypeEdit->setText(currentText);
 }
 
 void newSubjectForm::on_deleteSelectedSubject_clicked()
@@ -357,7 +366,9 @@ void newSubjectForm::on_deleteSelectedType_clicked()
         return ;
     }
 
-    QString subjectName = ui->SubjectNameEdit->text().trimmed();
+//    QString subjectName = ui->SubjectNameEdit->text().trimmed();
+    QList<QListWidgetItem *> selectedSubjects = ui->subjectsListsView->selectedItems();
+    QString subjectName = selectedSubjects.at(0)->text();
     if (subjectName.isEmpty()) {
         QMessageBox::warning(this, tr("警告"), tr("请先选中课程名称!"), QMessageBox::Ok);
         return ;
@@ -633,8 +644,9 @@ void newSubjectForm::on_subjectCB2_currentIndexChanged(const QString &arg1)
 
 void newSubjectForm::on_quesTypeCB2_currentIndexChanged(const QString &arg1)
 {
-    ui->questionTypeEdit->setText(arg1);
+//    ui->questionTypeEdit->setText(arg1);
 
+    (void)arg1;
     questionNumRefresh();
 }
 
@@ -809,6 +821,8 @@ void newSubjectForm::on_changeButton_clicked()
 
 void newSubjectForm::on_questNumCB_valueChanged(int arg1)
 {
+    (void)arg1;
+
     QString subjectName = ui->subjectCB2->currentText();
     QString questionTypeName = ui->quesTypeCB2->currentText();
 

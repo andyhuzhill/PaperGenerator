@@ -327,6 +327,7 @@ void newTestForm::on_SubjectNameCB_currentIndexChanged(const QString &arg1)
 
 void newTestForm::on_questionTypeCB_currentIndexChanged(const QString &arg1)
 {
+    (void)arg1;
     QString subjectName = ui->SubjectNameCB->currentText();
     QString questionTypeName = ui->questionTypeCB->currentText();
     questionNumRefresh();
@@ -498,6 +499,7 @@ void newTestForm::on_chooseMany_clicked()
 
 void newTestForm::on_tabWidget_currentChanged(QWidget *arg1)
 {
+    (void)arg1;
     ui->alreadySelectQuestions->clear();
     foreach (Question que, questions) {
         QListWidgetItem *item = new QListWidgetItem(QString("%1:%2:%3").arg(que.getSubjectName()).arg(que.getQuestionType()).arg(que.getId()));
@@ -718,6 +720,7 @@ void newTestForm::on_questionNumListWidget_itemClicked(QListWidgetItem *item)
 
 void newTestForm::on_questionNumListWidget_currentRowChanged(int currentRow)
 {
+    (void)currentRow;
     QString subjectName = ui->SubjectNameCB->currentText();
     QString questionTypeName = ui->questionTypeCB->currentText();
     if (!ui->questionNumListWidget->currentItem()) {

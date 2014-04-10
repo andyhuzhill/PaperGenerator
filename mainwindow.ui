@@ -14,28 +14,6 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>80</y>
-      <width>731</width>
-      <height>381</height>
-     </rect>
-    </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QTextBrowser" name="textBrowser"/>
-     </item>
-     <item>
-      <widget class="QListWidget" name="listWidget">
-       <property name="selectionMode">
-        <enum>QAbstractItemView::MultiSelection</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
@@ -101,12 +79,34 @@
      <string>管理试题库</string>
     </property>
    </widget>
-   <zorder>layoutWidget</zorder>
-   <zorder>label</zorder>
-   <zorder>layoutWidget</zorder>
-   <zorder>label_2</zorder>
-   <zorder>newTestButton</zorder>
-   <zorder>manageQuestionButton</zorder>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>81</y>
+      <width>711</width>
+      <height>381</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QTreeWidget" name="subjectsView">
+       <column>
+        <property name="text">
+         <string notr="true">1</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item>
+      <widget class="QListWidget" name="listWidget">
+       <property name="selectionMode">
+        <enum>QAbstractItemView::MultiSelection</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -114,7 +114,7 @@
      <x>0</x>
      <y>0</y>
      <width>751</width>
-     <height>19</height>
+     <height>17</height>
     </rect>
    </property>
   </widget>
