@@ -274,19 +274,6 @@ void MainWindow::onCheckUpdate()
 
     int Min   = Version.split(".").at(2).toInt();
 
-    QFile currentVersionFile("VERSION");
-    if (!currentVersionFile.open(QFile::ReadOnly)) {
-        return ;
-    }
-
-    QString currentVersion = currentVersionFile.readAll();
-
-    int curMajor = currentVersion.split(".").at(0).toInt();
-
-    int curMinor = currentVersion.split(".").at(1).toInt();
-
-    int curMin   = currentVersion.split(".").at(2).toInt();
-
     if ((curMajor < Major)
             ||(curMinor < Minor)
             ||(curMin  < Min)
@@ -294,7 +281,6 @@ void MainWindow::onCheckUpdate()
         showUpdate();
     }
 
-    currentVersionFile.close();
 }
 
 
