@@ -13,6 +13,7 @@ class QAction;
 class newSubjectForm;
 class newTestForm;
 class manageUserForm;
+class SubjectManager;
 class QListWidgetItem;
 
 namespace Ui {
@@ -71,6 +72,7 @@ private:
     newTestForm     *testForm;
     newSubjectForm  *subjectForm;
     manageUserForm  *userForm;
+    SubjectManager  *subjectManager;
 
     QAxWidget *word;
     QString paperPath;

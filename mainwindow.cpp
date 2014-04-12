@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "subjectmanager.h"
+
 #include <QMessageBox>
 #include <QAction>
 #include <QSqlQuery>
@@ -64,11 +66,17 @@ void MainWindow::newTest()
 /** @brief 管理试题库 */
 void MainWindow::manageSubject()
 {
-    subjectForm = new newSubjectForm();
-    subjectForm->setWindowFlags(subjectForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
+//    subjectForm = new newSubjectForm();
+//    subjectForm->setWindowFlags(subjectForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
 
-    subjectForm->show();
-    connect(subjectForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
+//    subjectForm->show();
+//    connect(subjectForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
+    subjectManager = new SubjectManager();
+    subjectManager->setWindowFlags(subjectManager->windowFlags() & ~Qt::WindowMaximizeButtonHint);
+
+    subjectManager->show();
+    connect(subjectManager, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
+
 }
 
 /** @brief  管理用户及密码 */
@@ -195,7 +203,7 @@ void MainWindow::createMenus()
 /** @brief 创建工具栏  */
 void MainWindow::createToolBars()
 {
-//    ui->mainToolBar->addAction(newTestAction);
+    //    ui->mainToolBar->addAction(newTestAction);
     //    ui->mainToolBar->addAction(manageSubjectAction);
 }
 
@@ -232,35 +240,37 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 /** @brief 删除选定的试卷  */
 void MainWindow::on_deleteSelectPaper_clicked()
 {
-    QSqlQuery query;
-    QList<QListWidgetItem *> selectedPaper = ui->listWidget->selectedItems();
-    if (selectedPaper.length() == 0) {
-        QMessageBox::warning(this, tr("警告"), tr("请先选中要删除的试卷名称!"), QMessageBox::Ok);
-        return ;
-    }
-
-    foreach (QListWidgetItem *item, selectedPaper) {
-        if (item->text() == tr("自动保存的试卷")) {
-            QMessageBox::information(this, tr("通知"), tr("自动保存的试卷无法删除"), QMessageBox::Ok);
-            continue;
+    if ( QMessageBox::Yes == QMessageBox::warning(this, tr("警告"), tr("您确定要删除选定的试卷？"), QMessageBox::Yes, QMessageBox::No)) {
+        QSqlQuery query;
+        QList<QListWidgetItem *> selectedPaper = ui->listWidget->selectedItems();
+        if (selectedPaper.length() == 0) {
+            QMessageBox::warning(this, tr("警告"), tr("请先选中要删除的试卷名称!"), QMessageBox::Ok);
+            return ;
         }
 
-        bool status1 = query.exec(QString("DROP TABLE '%1_Paper'").arg(item->text()));
-        bool status2 = query.exec(QString("DELETE FROM savedPaper where paperName = '%1'").arg(item->text()));
+        foreach (QListWidgetItem *item, selectedPaper) {
+            if (item->text() == tr("自动保存的试卷")) {
+                QMessageBox::information(this, tr("通知"), tr("自动保存的试卷无法删除"), QMessageBox::Ok);
+                continue;
+            }
 
-        if (!status1 || !status2) {
-            QMessageBox::warning(this, tr("警告"), tr("无法删除试卷<%1>").arg(item->text()));
-            return;
+            bool status1 = query.exec(QString("DROP TABLE '%1_Paper'").arg(item->text()));
+            bool status2 = query.exec(QString("DELETE FROM savedPaper where paperName = '%1'").arg(item->text()));
+
+            if (!status1 || !status2) {
+                QMessageBox::warning(this, tr("警告"), tr("无法删除试卷<%1>").arg(item->text()));
+                return;
+            }
         }
-    }
 
-    textViewRefresh();
+        textViewRefresh();
+    }
 }
 
 
 void MainWindow::showUpdate()
 {
-     QMessageBox::information(this, tr("有更新可用"), tr("您好,本程序有更新的版本可用。请到如下地址下载最新版本安装：<br><a href='https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe'>https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe</a>"));
+    QMessageBox::information(this, tr("有更新可用"), tr("您好,本程序有更新的版本可用。请到如下地址下载最新版本安装：<br><a href='https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe'>https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe</a>"));
 
 }
 

@@ -21,7 +21,11 @@ SOURCES += main.cpp\
     manageuserform.cpp \
     docreadwriter.cpp \
     firstsettingsdialog.cpp \
-    question.cpp
+    question.cpp \
+    newsubject.cpp \
+    subjectmanager.cpp \
+    newquestion.cpp \
+    modifyquestion.cpp
 
 HEADERS  += mainwindow.h \
     logindialog.h \
@@ -31,14 +35,22 @@ HEADERS  += mainwindow.h \
     docreadwriter.h \
     firstsettingsdialog.h \
     defs.h \
-    question.h
+    question.h \
+    newsubject.h \
+    subjectmanager.h \
+    newquestion.h \
+    modifyquestion.h
 
 FORMS    += mainwindow.ui \
     logindialog.ui \
     newtestform.ui \
     newsubjectform.ui \
     manageuserform.ui \
-    firstsettingsdialog.ui
+    firstsettingsdialog.ui \
+    newsubject.ui \
+    subjectmanager.ui \
+    newquestion.ui \
+    modifyquestion.ui
 
 OTHER_FILES += \
     ReadMe.txt \

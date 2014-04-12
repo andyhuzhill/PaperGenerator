@@ -14,6 +14,17 @@ namespace Ui {
 class newTestForm;
 }
 
+//typedef struct _Question{
+//    int prvid;
+//    QString subjectName;
+//    QString questionType;
+//    QString point;
+//    QString degrade;
+//    QString difficulty;
+//    QString questionDocPath;
+//    QString answerDocPath;
+//}Question;
+
 class newTestForm : public QWidget
 {
     Q_OBJECT

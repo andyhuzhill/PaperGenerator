@@ -9,11 +9,17 @@ struct Login{
     QString passwd;
 };
 
+//#define __WPS__
+
+#ifdef __WPS__
+const QString wordAppName="Wps.Application";
+#else
 const QString wordAppName="Word.Application";
+#endif
 
 /*** 定义当前软件版本 */
 const int curMajor = 1;
 const int curMinor = 5;
-const int curMin   = 2;
+const int curMin   = 5;
 
 #endif // DEFS_H
