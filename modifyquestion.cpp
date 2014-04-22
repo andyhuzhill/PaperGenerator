@@ -115,7 +115,16 @@ void ModifyQuestion::on_modifyAnswer_clicked()
 void ModifyQuestion::on_confirmChange_clicked()
 {
     QSqlQuery query;
-    if (modifyWhich!=0) {
+
+    QString subjectName = ui->subjectCombox->currentText();
+    QString questionTypeName = ui->questionTypeCombox->currentText();
+
+    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
+        return ;
+    }
+
+    if (modifyWhich!= EMod_None) {
         word = new QAxWidget(wordAppName);
         if (!word) {
             QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
@@ -129,16 +138,6 @@ void ModifyQuestion::on_confirmChange_clicked()
             word->dynamicCall("Quit(boolean)", true);
             delete word;
             return;
-        }
-
-        QString subjectName = ui->subjectCombox->currentText();
-        QString questionTypeName = ui->questionTypeCombox->currentText();
-
-        if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
-            QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
-            word->dynamicCall("Quit(boolean)", true);
-            delete word;
-            return ;
         }
 
         QClipboard *clip = QApplication::clipboard();
@@ -268,14 +267,6 @@ void ModifyQuestion::on_confirmChange_clicked()
         delete word;
     }
 
-    QString subjectName = ui->subjectCombox->currentText();
-    QString questionTypeName = ui->questionTypeCombox->currentText();
-
-    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
-        QMessageBox::warning(this, tr("警告"), tr("请先创建课程和题型！"), QMessageBox::Ok);
-        return ;
-    }
-
     QString strDifficulty = QString("%1").arg(ui->diffSP->value());
     QString strPoint = ui->pointEdit->text().trimmed();
 
@@ -295,6 +286,8 @@ void ModifyQuestion::on_confirmChange_clicked()
     if ( updatePointResult && updateDifficultyResult) {
         QMessageBox::information(this, tr("通知"), tr("修改试题成功！"), QMessageBox::Ok);
 
+        on_questionNumberCombox_valueChanged(0);
+
         modifyWhich = EMod_None;
     }else{
         QMessageBox::warning(this, tr("警告"), tr("修改试题失败！"), QMessageBox::Ok);
@@ -304,6 +297,30 @@ void ModifyQuestion::on_confirmChange_clicked()
 void ModifyQuestion::on_deleteButton_clicked()
 {
 
+    if (QMessageBox::Yes == QMessageBox::warning(this, tr("警告"), tr("您确定要删除该题目？"), QMessageBox::Yes, QMessageBox::No)) {
+        QString subjectName = ui->subjectCombox->currentText();
+        QString questionTypeName = ui->questionTypeCombox->currentText();
+
+        if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+            QMessageBox::warning(this, tr("警告"), tr("请先选择课程和题型！"), QMessageBox::Ok);
+            return ;
+        }
+
+        QSqlQuery query;
+
+        bool status1 = query.exec(QString("DELETE FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questionNumberCombox->value()));
+
+        if(status1){
+            QMessageBox::information(this, tr("通知"), tr("试题删除成功！"), QMessageBox::Ok);
+            ui->questionBrowser->clear();
+            ui->answerBrowser->clear();
+            ui->diffSP->clear();
+            ui->pointEdit->clear();
+            on_questionNumberCombox_valueChanged(0);
+        }else{
+            QMessageBox::warning(this, tr("警告"), tr("试题删除失败！"), QMessageBox::Ok);
+        }
+    }
 }
 
 void ModifyQuestion::on_prevButton_clicked()
@@ -381,17 +398,17 @@ void ModifyQuestion::modifyQA(QString QorA)
                    .arg(questionTypeName)
                    .arg(ui->questionNumberCombox->value())
                    );
-        if (modifyWhich != EMod_Answer) {
-            modifyWhich = EMod_Question;
-        }else{
+        if (modifyWhich == EMod_Answer) {
             modifyWhich = EMod_QandA;
+        }else{
+            modifyWhich = EMod_Question;
         }
     }else{
         query.exec(QString("SELECT AnswerDocPath FROM '%1_%2' WHERE id = %3").arg(subjectName).arg(questionTypeName).arg(ui->questionNumberCombox->value()));
-        if (modifyWhich != EMod_Question) {
-            modifyWhich = EMod_Answer;
-        }else{
+        if (modifyWhich == EMod_Question) {
             modifyWhich = EMod_QandA;
+        }else{
+            modifyWhich = EMod_Answer;
         }
     }
     query.next();

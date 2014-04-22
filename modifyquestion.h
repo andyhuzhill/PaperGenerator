@@ -33,8 +33,7 @@ enum EnumModified{
     EMod_None,
     EMod_Question,
     EMod_Answer,
-    EMod_QandA,
-    EMod_Other
+    EMod_QandA
 };
 
 class ModifyQuestion : public QWidget
@@ -81,7 +80,6 @@ private:
     QAxWidget *word;
 
     QString questionLibraryPath;
-
 
     EnumModified modifyWhich;    /**< 修改了问题、答案或者是两者都有被修改 */
 };

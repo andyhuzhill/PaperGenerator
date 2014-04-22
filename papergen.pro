@@ -17,20 +17,19 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     logindialog.cpp \
     newtestform.cpp \
-    newsubjectform.cpp \
-    manageuserform.cpp \
     docreadwriter.cpp \
     firstsettingsdialog.cpp \
     question.cpp \
     newsubject.cpp \
     subjectmanager.cpp \
     newquestion.cpp \
-    modifyquestion.cpp
+    modifyquestion.cpp \
+    manageuserform.cpp \
+    autonewpaper.cpp
 
 HEADERS  += mainwindow.h \
     logindialog.h \
     newtestform.h \
-    newsubjectform.h \
     manageuserform.h \
     docreadwriter.h \
     firstsettingsdialog.h \
@@ -39,12 +38,12 @@ HEADERS  += mainwindow.h \
     newsubject.h \
     subjectmanager.h \
     newquestion.h \
-    modifyquestion.h
+    modifyquestion.h \
+    autonewpaper.h
 
 FORMS    += mainwindow.ui \
     logindialog.ui \
     newtestform.ui \
-    newsubjectform.ui \
     manageuserform.ui \
     firstsettingsdialog.ui \
     newsubject.ui \

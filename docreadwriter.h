@@ -32,8 +32,6 @@ public:
         questionType = type;
     }
 
-    bool setHeader(QAxObject *doc, QString school, QString subjectName, QString answerOrNot, QString testType, QString testTime, QString teacherName);
-
     bool readAndConvert();
     QString getQuestion();
     QString getQuestionDocPath();

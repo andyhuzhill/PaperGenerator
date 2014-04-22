@@ -10,7 +10,6 @@
 #include <QNetworkRequest>
 
 class QAction;
-class newSubjectForm;
 class newTestForm;
 class manageUserForm;
 class SubjectManager;
@@ -53,7 +52,7 @@ private:
 
     void checkUpdate();
 
-    void showUpdate();
+    void showUpdate(QString version);
 
 
     QAction *newTestAction;
@@ -70,7 +69,6 @@ private:
     QMenu *helpMenu;
 
     newTestForm     *testForm;
-    newSubjectForm  *subjectForm;
     manageUserForm  *userForm;
     SubjectManager  *subjectManager;
 

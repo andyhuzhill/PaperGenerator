@@ -11,7 +11,6 @@
 #include <QDir>
 #include <QDesktopServices>
 
-#include <newsubjectform.h>
 #include <newtestform.h>
 #include <manageuserform.h>
 
@@ -66,11 +65,6 @@ void MainWindow::newTest()
 /** @brief 管理试题库 */
 void MainWindow::manageSubject()
 {
-//    subjectForm = new newSubjectForm();
-//    subjectForm->setWindowFlags(subjectForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
-
-//    subjectForm->show();
-//    connect(subjectForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
     subjectManager = new SubjectManager();
     subjectManager->setWindowFlags(subjectManager->windowFlags() & ~Qt::WindowMaximizeButtonHint);
 
@@ -203,8 +197,8 @@ void MainWindow::createMenus()
 /** @brief 创建工具栏  */
 void MainWindow::createToolBars()
 {
-    //    ui->mainToolBar->addAction(newTestAction);
-    //    ui->mainToolBar->addAction(manageSubjectAction);
+//    ui->mainToolBar->addAction(newTestAction);
+//    ui->mainToolBar->addAction(manageSubjectAction);
 }
 
 void MainWindow::checkUpdate()
@@ -268,9 +262,9 @@ void MainWindow::on_deleteSelectPaper_clicked()
 }
 
 
-void MainWindow::showUpdate()
+void MainWindow::showUpdate(QString version)
 {
-    QMessageBox::information(this, tr("有更新可用"), tr("您好,本程序有更新的版本可用。请到如下地址下载最新版本安装：<br><a href='https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe'>https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe</a>"));
+    QMessageBox::information(this, tr("有更新可用"), tr("本软件有更新的版本(%1)可用。请点击如下地址下载最新版本安装：<br><a href='https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe'>https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe</a>").arg(version));
 
 }
 
@@ -288,7 +282,7 @@ void MainWindow::onCheckUpdate()
             ||(curMinor < Minor)
             ||(curMin  < Min)
             ){
-        showUpdate();
+        showUpdate(Version.remove("\n"));
     }
 
 }

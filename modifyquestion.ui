@@ -16,7 +16,7 @@
   <widget class="QLabel" name="numOfQuestiongLabel">
    <property name="geometry">
     <rect>
-     <x>600</x>
+     <x>490</x>
      <y>80</y>
      <width>71</width>
      <height>17</height>
@@ -80,7 +80,7 @@
    <property name="title">
     <string>编辑区</string>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>15</x>
@@ -264,7 +264,7 @@
     <string>后一题</string>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>

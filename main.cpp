@@ -5,6 +5,7 @@
 #include <QSqlDatabase>
 #include <QTextCodec>
 #include <QTranslator>
+#include <autonewpaper.h>
 
 #include <iostream>
 
@@ -47,6 +48,9 @@ int main(int argc, char *argv[])
     if (!connect2Database()) {
         return -1;
     }
+
+    AutoNewPaper  paper;
+    paper.show();
 
     /** 登陆窗口 */
     LoginDialog loginDialog;

@@ -38,9 +38,9 @@ SubjectManager::SubjectManager(QWidget *parent) :
     ui->stackedWidget->addWidget(subject);
     ui->stackedWidget->addWidget(question);
     ui->stackedWidget->addWidget(modifyQuestion);
-    ui->listWidget->addItem(tr("新建课程"));
+    ui->listWidget->addItem(tr("新建课程与题型"));
     ui->listWidget->addItem(tr("录入新题"));
-    ui->listWidget->addItem(tr("修改题目"));
+    ui->listWidget->addItem(tr("查看或修改题目"));
 
     connect(ui->listWidget, SIGNAL(currentRowChanged(int)), ui->stackedWidget, SLOT(setCurrentIndex(int)));
 

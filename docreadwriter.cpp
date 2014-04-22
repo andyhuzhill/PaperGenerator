@@ -239,21 +239,3 @@ void DocReadWriter::parserImage(QString &html, QString QorA)
     }
 }
 
-bool DocReadWriter::setHeader(QAxObject *doc, QString school, QString subjectName, QString answerOrNot, QString testType, QString testTime, QString teacherName)
-{
-    QAxObject *schoolBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("学院"));
-    QAxObject *subjectBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("考试科目"));
-    QAxObject *AQBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("答案"));
-    QAxObject *testTypeBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("考试方式"));
-    QAxObject *testTimeBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("考试时间"));
-    QAxObject *teacherNameBookmarks = doc->querySubObject("Bookmarks(QVariant)", QObject::tr("出题人"));
-
-    schoolBookmarks->querySubObject("Range")->setProperty("Text", school);
-    subjectBookmarks->querySubObject("Range")->setProperty("Text", subjectName);
-    AQBookmarks->querySubObject("Range")->setProperty("Text", answerOrNot);
-    testTypeBookmarks->querySubObject("Range")->setProperty("Text", testType);
-    testTimeBookmarks->querySubObject("Range")->setProperty("Text", testTime);
-    teacherNameBookmarks->querySubObject("Range")->setProperty("Text", teacherName);
-
-    return true;
-}

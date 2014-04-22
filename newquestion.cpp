@@ -213,7 +213,6 @@ void NewQuestion::on_inputButton_clicked()
         return;
     }
 
-
     QString subjectName = ui->subjectCombox->currentText();
     QString questionTypeName = ui->questionTypeCombox->currentText();
 
@@ -224,11 +223,19 @@ void NewQuestion::on_inputButton_clicked()
         return ;
     }
 
+    QSqlQuery query;
+
+    query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
+    query.next();
+    int numOfQuestions = query.value(0).toInt()+1;
+
     QClipboard *clip = QApplication::clipboard();
     const QMimeData *dat;
     QAxObject *active_doc;
 
-    docs->dynamicCall("Open(QString)", "OneQuestion.doc");
+    QDir currentDir(".");
+
+    docs->dynamicCall("Open(QString)", QString("%1/OneQuestion.doc").arg(currentDir.currentPath()));
     active_doc = word->querySubObject("ActiveDocument");
     if (!active_doc) {
         QMessageBox::warning(this, tr("警告"), tr("无法获得文档<OneQuestion.doc>！"), QMessageBox::Ok);
@@ -236,33 +243,72 @@ void NewQuestion::on_inputButton_clicked()
         delete word;
         return;
     }
-//    active_doc->dynamicCall("Select()");
-//    active_doc->querySubObject("Range()")->dynamicCall("Copy()");
+    active_doc->dynamicCall("Select()");
+    active_doc->querySubObject("Range()")->dynamicCall("Copy()");
 
-//    dat = clip->mimeData();
+    dat = clip->mimeData();
 
-//    if (dat->hasHtml()) {
-//        QString html = dat->html();
+    QString questionHtml;
+    QString questionFilePath;
 
-//        QString outPath = query.value(0).toString().remove("Answer.doc");
-//        extractImage(html, "Question", outPath);
-//        html.replace("\"","'");
-//    }
-//    clip->clear();
+    if (dat->hasHtml()) {
+        QString html = dat->html();
+
+        QDir dir(".");
+
+        QString outPath = QString("%1/%2/%3/%4")
+                .arg(questionLibraryPath)
+                .arg(subjectName)
+                .arg(questionTypeName)
+                .arg(numOfQuestions);
+        dir.mkdir(outPath);
+        extractImage(html, "Question", outPath);
+        html.replace("\"","'");
+        questionHtml = html;
+        questionFilePath = outPath + "/question.doc";
+        questionFile.copy(questionFilePath);
+    }
+    clip->clear();
+
+    docs->dynamicCall("Open(QString)", QString("%1/TheAnswer.doc").arg(currentDir.currentPath()));
+    active_doc = word->querySubObject("ActiveDocument");
+    if (!active_doc) {
+        QMessageBox::warning(this, tr("警告"), tr("无法获得文档<TheAnswer.doc>！"), QMessageBox::Ok);
+        word->dynamicCall("Quit(Boolean)", true);
+        delete word;
+        return;
+    }
+    active_doc->dynamicCall("Select()");
+    active_doc->querySubObject("Range()")->dynamicCall("Copy()");
+
+    dat = clip->mimeData();
+
+    QString answerHtml;
+    QString answerFilePath;
+
+    if (dat->hasHtml()) {
+        QString html = dat->html();
+        QDir dir(".");
+
+        QString outPath = QString("%1/%2/%3/%4")
+                .arg(questionLibraryPath)
+                .arg(subjectName)
+                .arg(questionTypeName)
+                .arg(numOfQuestions);
+
+        dir.mkdir(outPath);
+        extractImage(html, "Answer", outPath);
+        html.replace("\"","'");
+        answerHtml = html;
+        answerFilePath = outPath + "/answer.doc";
+        answerFile.copy(answerFilePath);
+    }
+    clip->clear();
 
     // TODO 录入题目与答案
 
-//    QString subjectName = ui->subjectCombox->currentText();
-//    QString questionTypeName = ui->questionTypeCombox->currentText();
-
     QString point = ui->pointEdit->text().trimmed();
     int     diff  = ui->diffSP->value();
-
-    QSqlQuery query;
-
-    query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
-    query.next();
-    int numOfQuestions = query.value(0).toInt()+1;
 
     QString insertInfoCmd = QString("INSERT INTO '%1_%2' VALUES("
                                     "%3,"           //id
@@ -277,13 +323,13 @@ void NewQuestion::on_inputButton_clicked()
             .arg(subjectName)
             .arg(questionTypeName)
             .arg(numOfQuestions)
-            .arg("question")
-            .arg("answer")
-            .arg("questionPath")
-            .arg("answerPath")
+            .arg(questionHtml)
+            .arg(answerHtml)
+            .arg(questionFilePath)
+            .arg(answerFilePath)
             .arg(point)
             .arg(diff)
-            .arg("degrade");
+            .arg("0");
 
     bool status = query.exec(insertInfoCmd);
     if (status) {
@@ -351,7 +397,21 @@ void NewQuestion::on_inputOne_clicked()
 
     DocReadWriter *docread = new DocReadWriter(this);
 
-    docread->setSourceDest(fileName, QString("%1/%2/%3").arg(questionLibraryPath).arg(subjectName).arg(questionTypeName));
+    QSqlQuery query;
+
+    query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
+    query.next();
+    int numOfQuestions = query.value(0).toInt()+1;
+
+    QString outPath = QString("%1/%2/%3/%4")
+            .arg(questionLibraryPath)
+            .arg(subjectName)
+            .arg(questionTypeName)
+            .arg(numOfQuestions);
+    QDir dir(".");
+    dir.mkdir(outPath);
+
+    docread->setSourceDest(fileName, outPath);
     docread->setDocuemnt(docs);
 
     if(!docread->readAndConvert()){
@@ -380,11 +440,6 @@ void NewQuestion::on_inputOne_clicked()
 
     QString degrade = docread->getDegrade();
 
-    QSqlQuery query;
-
-    query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
-    query.next();
-    int numOfQuestions = query.value(0).toInt()+1;
 
     QString insertInfoCmd = QString("INSERT INTO '%1_%2' VALUES("
                                     "%3,"           //id
@@ -494,7 +549,17 @@ void NewQuestion::on_inputMany_clicked()
         if (file.endsWith(".doc") || file.endsWith(".docx")) {
             DocReadWriter *docread = new DocReadWriter(this);
 
-            docread->setSourceDest(QString("%1/%2").arg(inputManyPath).arg(file), QString("%1/%2/%3").arg(questionLibraryPath).arg(subjectName).arg(questionTypeName));
+            QString outPath = QString("%1/%2/%3/%4")
+                    .arg(questionLibraryPath)
+                    .arg(subjectName)
+                    .arg(questionTypeName)
+                    .arg(numOfQuestions);
+            QDir dir(".");
+            dir.mkdir(outPath);
+            docread->setSourceDest(QString("%1/%2")
+                                   .arg(inputManyPath)
+                                   .arg(file),
+                                   outPath);
             docread->setDocuemnt(docs);
 
             if(!docread->readAndConvert()){

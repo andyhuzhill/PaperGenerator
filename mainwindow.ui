@@ -19,9 +19,17 @@
      <rect>
       <x>20</x>
       <y>50</y>
-      <width>131</width>
+      <width>171</width>
       <height>16</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>宋体</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>已经建立的题库信息：</string>
@@ -31,14 +39,20 @@
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>44</y>
+      <y>34</y>
       <width>361</width>
-      <height>31</height>
+      <height>41</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="label_2">
+       <property name="font">
+        <font>
+         <family>宋体</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>已保存的试卷:</string>
        </property>
@@ -46,6 +60,18 @@
      </item>
      <item>
       <widget class="QPushButton" name="deleteSelectPaper">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <family>宋体</family>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>删除选择的试卷</string>
        </property>
@@ -62,6 +88,12 @@
       <height>41</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>楷体</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
     <property name="text">
      <string>新建试卷</string>
     </property>
@@ -71,15 +103,21 @@
      <rect>
       <x>160</x>
       <y>10</y>
-      <width>131</width>
+      <width>151</width>
       <height>41</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>楷体</family>
+      <pointsize>14</pointsize>
+     </font>
     </property>
     <property name="text">
      <string>管理试题库</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>20</x>
