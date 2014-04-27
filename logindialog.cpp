@@ -38,6 +38,8 @@ LoginDialog::LoginDialog(QWidget *parent) :
 
     setWindowIcon(QIcon(":/images/computer.png"));
     setWindowTitle(tr("试卷自动化生成工具"));
+
+    ui->loginButton->setFocus();
 }
 
 LoginDialog::~LoginDialog()

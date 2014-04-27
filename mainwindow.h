@@ -44,6 +44,8 @@ private slots:
 
     void onCheckUpdate();
 
+    void on_pushButton_clicked();
+
 private:
     Ui::MainWindow *ui;
     void createActions();

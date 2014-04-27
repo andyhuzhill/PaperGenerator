@@ -131,7 +131,7 @@ void ModifyQuestion::on_confirmChange_clicked()
             return ;
         }
         word->setProperty("Visible", false);    //隐藏word程序
-        word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+        word->setProperty("DisplayAlerts", true);
         QAxObject *docs = word->querySubObject("Documents");
         if (!docs) {
             QMessageBox::warning(this, tr("警告"), tr("无法获得Documents对象"), QMessageBox::Ok);
@@ -376,7 +376,7 @@ void ModifyQuestion::modifyQA(QString QorA)
         return ;
     }
     word->setProperty("Visible", false);    //隐藏word程序
-    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+    word->setProperty("DisplayAlerts", true);
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {
         QMessageBox::warning(this, tr("警告"), tr("无法获取Documents对象！"), QMessageBox::Ok);

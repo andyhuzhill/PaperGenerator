@@ -411,7 +411,7 @@ void newTestForm::on_generatePaperButton_clicked()
 
     word = new QAxWidget(wordAppName);
     word->setProperty("Visible", false);
-    word->setProperty("DisplayAlerts", false);
+    word->setProperty("DisplayAlerts", true);
 
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {

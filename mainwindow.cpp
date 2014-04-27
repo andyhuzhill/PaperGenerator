@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 
 #include "subjectmanager.h"
+#include "autonewpaper.h"
+#include "defs.h"
 
 #include <QMessageBox>
 #include <QAction>
@@ -16,6 +18,8 @@
 
 #include <QSslConfiguration>
 #include <QFile>
+#include <QSettings>
+#include <QTextCodec>
 
 #include <iostream>
 
@@ -44,7 +48,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(onCheckUpdate()));
 
-    checkUpdate();
+    QSettings settings("app.ini", QSettings::IniFormat);
+
+    settings.setIniCodec(QTextCodec::codecForName("GB2312"));
+
+    if (settings.value("checkupdate").toInt() == 1 ){
+        checkUpdate();
+    }
 }
 
 MainWindow::~MainWindow()
@@ -135,7 +145,7 @@ void MainWindow::textViewRefresh()
         QString paperName = query.value(0).toString();
         QListWidgetItem *item;
         if (paperName == "autoSavedPaper") {
-            item = new QListWidgetItem(tr("自动保存试卷"));
+            item = new QListWidgetItem(tr("自动保存的试卷"));
         }else{
             item = new QListWidgetItem(query.value(0).toString());
         }
@@ -197,8 +207,8 @@ void MainWindow::createMenus()
 /** @brief 创建工具栏  */
 void MainWindow::createToolBars()
 {
-//    ui->mainToolBar->addAction(newTestAction);
-//    ui->mainToolBar->addAction(manageSubjectAction);
+    //    ui->mainToolBar->addAction(newTestAction);
+    //    ui->mainToolBar->addAction(manageSubjectAction);
 }
 
 void MainWindow::checkUpdate()
@@ -244,7 +254,7 @@ void MainWindow::on_deleteSelectPaper_clicked()
 
         foreach (QListWidgetItem *item, selectedPaper) {
             if (item->text() == tr("自动保存的试卷")) {
-                QMessageBox::information(this, tr("通知"), tr("自动保存的试卷无法删除"), QMessageBox::Ok);
+                QMessageBox::information(this, tr("通知"), tr("自动保存的试卷无法被删除"), QMessageBox::Ok);
                 continue;
             }
 
@@ -252,7 +262,7 @@ void MainWindow::on_deleteSelectPaper_clicked()
             bool status2 = query.exec(QString("DELETE FROM savedPaper where paperName = '%1'").arg(item->text()));
 
             if (!status1 || !status2) {
-                QMessageBox::warning(this, tr("警告"), tr("无法删除试卷<%1>").arg(item->text()));
+                QMessageBox::warning(this, tr("警告"), tr("删除试卷<%1>失败！").arg(item->text()));
                 return;
             }
         }
@@ -264,7 +274,7 @@ void MainWindow::on_deleteSelectPaper_clicked()
 
 void MainWindow::showUpdate(QString version)
 {
-    QMessageBox::information(this, tr("有更新可用"), tr("本软件有更新的版本(%1)可用。请点击如下地址下载最新版本安装：<br><a href='https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe'>https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe</a>").arg(version));
+    QMessageBox::information(this, tr("有更新可用"), tr("本软件当前版本号为:(%2.%3.%4).有更新的版本(%1)可用。请点击如下地址下载最新版本安装：<br><a href='https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe'>https://raw.githubusercontent.com/dqyxxgcxy/PaperGenerator/master/PaperGeneratorSetup.exe</a>").arg(version).arg(curMajor).arg(curMinor).arg(curMin));
 
 }
 
@@ -289,3 +299,10 @@ void MainWindow::onCheckUpdate()
 
 
 
+
+void MainWindow::on_pushButton_clicked()
+{
+    AutoNewPaper *paper = new AutoNewPaper(this);
+//    paper->show();
+    paper->exec();
+}

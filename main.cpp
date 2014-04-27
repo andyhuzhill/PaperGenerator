@@ -49,9 +49,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    AutoNewPaper  paper;
-    paper.show();
-
     /** 登陆窗口 */
     LoginDialog loginDialog;
     if (loginDialog.exec() == QDialog::Accepted) {

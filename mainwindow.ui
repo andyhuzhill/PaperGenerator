@@ -90,7 +90,7 @@
     </property>
     <property name="font">
      <font>
-      <family>楷体</family>
+      <family>Segoe UI</family>
       <pointsize>14</pointsize>
      </font>
     </property>
@@ -109,7 +109,7 @@
     </property>
     <property name="font">
      <font>
-      <family>楷体</family>
+      <family>Segoe UI</family>
       <pointsize>14</pointsize>
      </font>
     </property>
@@ -144,6 +144,19 @@
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QPushButton" name="pushButton">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>10</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PushButton</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">

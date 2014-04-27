@@ -204,7 +204,7 @@ void NewQuestion::on_inputButton_clicked()
         return ;
     }
     word->setProperty("Visible", false);    //隐藏word程序
-    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+    word->setProperty("DisplayAlerts", true);
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {
         QMessageBox::warning(this, tr("警告"), tr("无法获得Documents对象"), QMessageBox::Ok);
@@ -305,7 +305,8 @@ void NewQuestion::on_inputButton_clicked()
     }
     clip->clear();
 
-    // TODO 录入题目与答案
+    word->dynamicCall("Quit(Boolean)", true);
+    delete word;
 
     QString point = ui->pointEdit->text().trimmed();
     int     diff  = ui->diffSP->value();
@@ -385,7 +386,7 @@ void NewQuestion::on_inputOne_clicked()
         return ;
     }
     word->setProperty("Visible", false);    //隐藏word程序
-    word->setProperty("DisplayAlerts", false); //不显示任何警告信息
+    word->setProperty("DisplayAlerts", true);
 
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {
@@ -530,7 +531,7 @@ void NewQuestion::on_inputMany_clicked()
         return ;
     }
     word->setProperty("Visible", false);        //隐藏word程序
-    word->setProperty("DisplayAlerts", false);  //不显示任何警告信息
+    word->setProperty("DisplayAlerts", true);  //显示警告信息
 
     QAxObject *docs = word->querySubObject("Documents");
     if (!docs) {
