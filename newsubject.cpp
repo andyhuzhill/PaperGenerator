@@ -104,6 +104,8 @@ void NewSubject::on_newSubjectButton_clicked()
         dir.mkdir(subjectName);
         subjectListRefresh();
 
+        ui->questionTypesLabel->setText(tr("课程[%1]题型列表：").arg(subjectName));
+        questionTypeListRefresh(subjectName);
         emit dataChanged();
 
     }else{
@@ -247,8 +249,6 @@ void NewSubject::on_deleteSelectedType_clicked()
             return ;
         }
 
-//        QList<QListWidgetItem *> selectedSubjects = ui->subjectsListsView->selectedItems();
-//        QString subjectName = selectedSubjects.at(0)->text();
         QString labelQuestionType = ui->questionTypesLabel->text();
         QString subjectName = labelQuestionType.mid(labelQuestionType.indexOf("[")+1, labelQuestionType.indexOf("]")-labelQuestionType.indexOf("[")-1);
         if (subjectName.isEmpty()) {
@@ -280,21 +280,23 @@ void NewSubject::questionTypeListRefresh(QString subject)
 {
     QSqlQuery query;
 
-    query.exec("SELECT subjectName FROM subjects");
+    bool bOk = query.exec("SELECT subjectName FROM subjects");
 
-    while (query.next()) {
-        if (query.value(0).toString() == subject) {
-            break;
-        }
-    }
-
-    ui->questionTypeList->clear();
-
-    if (query.value(0).toString() == subject) {
-        query.exec(QString("SELECT questionTypes FROM \"%1\"").arg(subject));
+    if (bOk) {
         while (query.next()) {
-            QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
-            ui->questionTypeList->addItem(item);
+            if (query.value(0).toString() == subject) {
+                break;
+            }
+        }
+
+        ui->questionTypeList->clear();
+
+        if (query.value(0).toString() == subject) {
+            query.exec(QString("SELECT questionTypes FROM \"%1\"").arg(subject));
+            while (query.next()) {
+                QListWidgetItem *item = new QListWidgetItem(query.value(0).toString());
+                ui->questionTypeList->addItem(item);
+            }
         }
     }
 }

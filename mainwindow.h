@@ -29,6 +29,7 @@ public:
 
     void closeEvent(QCloseEvent *);
     void focusInEvent(QFocusEvent *);
+
 private slots:
     void newTest();
     void manageSubject();

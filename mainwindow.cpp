@@ -69,6 +69,7 @@ void MainWindow::newTest()
     testForm->setWindowFlags(testForm->windowFlags() & ~Qt::WindowMaximizeButtonHint);
 
     testForm->show();
+    this->hide();
     connect(testForm, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
 }
 
@@ -79,6 +80,7 @@ void MainWindow::manageSubject()
     subjectManager->setWindowFlags(subjectManager->windowFlags() & ~Qt::WindowMaximizeButtonHint);
 
     subjectManager->show();
+    this->hide();
     connect(subjectManager, SIGNAL(contentChanged()), this, SLOT(textViewRefresh()));
 
 }
@@ -151,6 +153,8 @@ void MainWindow::textViewRefresh()
         }
         ui->listWidget->addItem(item);
     }
+
+    this->show();
 }
 
 void MainWindow::closeEvent(QCloseEvent *)
@@ -303,6 +307,5 @@ void MainWindow::onCheckUpdate()
 void MainWindow::on_pushButton_clicked()
 {
     AutoNewPaper *paper = new AutoNewPaper(this);
-//    paper->show();
     paper->exec();
 }

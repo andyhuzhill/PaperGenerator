@@ -46,12 +46,12 @@ newTestForm::newTestForm(QWidget *parent) :
     }
     ui->difficultyCB->addItems(difficulties);
     ui->difficultyCB->setCurrentIndex(0);
-    ui->difficultyCB_2->addItems(difficulties);
-    ui->difficultyCB_2->setCurrentIndex(0);
+//    ui->difficultyCB_2->addItems(difficulties);
+//    ui->difficultyCB_2->setCurrentIndex(0);
 
     connect(ui->pointsCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
     connect(ui->difficultyCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
-    connect(ui->difficultyCB_2, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
+//    connect(ui->difficultyCB_2, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
     connect(ui->SubjectNameCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
     connect(ui->questionTypeCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
 }
@@ -137,133 +137,133 @@ bool newTestForm::savePaper(QString paperName)
 
 bool newTestForm::autoChoose()
 {
-    if (ui->alreadySelected->count() == 0) {
-        QMessageBox::warning(this, tr("警告"), tr("已选题目数量为空，请重新选择！"), QMessageBox::Ok);
-        return false;
-    }
-    qsrand(QDateTime::currentMSecsSinceEpoch());
-    QSqlQuery query;
-    QMap<QString , int> tolerance;
-    ui->alreadySelected->selectAll();
-    QList<QListWidgetItem*> alreadyItems = ui->alreadySelected->selectedItems();
+//    if (ui->alreadySelected->count() == 0) {
+//        QMessageBox::warning(this, tr("警告"), tr("已选题目数量为空，请重新选择！"), QMessageBox::Ok);
+//        return false;
+//    }
+//    qsrand(QDateTime::currentMSecsSinceEpoch());
+//    QSqlQuery query;
+//    QMap<QString , int> tolerance;
+//    ui->alreadySelected->selectAll();
+//    QList<QListWidgetItem*> alreadyItems = ui->alreadySelected->selectedItems();
 
-    foreach (QListWidgetItem *item, alreadyItems) {
-        QStringList things = item->text().split(":");
-        QString subjectName = things.at(0);
-        QString questionTypeName = things.at(1);
-        QString point = things.at(2);
-        QString diff = things.at(3);
-        QString quesNum = things.at(4);
-        quesNum.remove(tr("题"));
-        int num = quesNum.toInt();
+//    foreach (QListWidgetItem *item, alreadyItems) {
+//        QStringList things = item->text().split(":");
+//        QString subjectName = things.at(0);
+//        QString questionTypeName = things.at(1);
+//        QString point = things.at(2);
+//        QString diff = things.at(3);
+//        QString quesNum = things.at(4);
+//        quesNum.remove(tr("题"));
+//        int num = quesNum.toInt();
 
-        QStringList point_s = getPoints(subjectName, questionTypeName);
-        //插入各个知识点许可的题目数目
-        foreach (QString pp, point_s) {
-            if (point == tr("任意知识点")) {
-                tolerance.insert(pp, 0);
-            }else{
-                tolerance.insert(pp, num);
-            }
-        }
-        query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
-        query.next();
+//        QStringList point_s = getPoints(subjectName, questionTypeName);
+//        //插入各个知识点许可的题目数目
+//        foreach (QString pp, point_s) {
+//            if (point == tr("任意知识点")) {
+//                tolerance.insert(pp, 0);
+//            }else{
+//                tolerance.insert(pp, num);
+//            }
+//        }
+//        query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes = '%2'").arg(subjectName).arg(questionTypeName));
+//        query.next();
 
-        int maxNumOfQuestions = query.value(0).toInt();
-        if (num > maxNumOfQuestions) {
-            QMessageBox::warning(this, tr("警告"), tr("科目《%1》 题型“%2”没有%3道题目！").arg(subjectName).arg(questionTypeName).arg(num), QMessageBox::Ok);
-            return false;
-        }
+//        int maxNumOfQuestions = query.value(0).toInt();
+//        if (num > maxNumOfQuestions) {
+//            QMessageBox::warning(this, tr("警告"), tr("科目《%1》 题型“%2”没有%3道题目！").arg(subjectName).arg(questionTypeName).arg(num), QMessageBox::Ok);
+//            return false;
+//        }
 
-        int cnt = 0;
-        int failCnt = 0;
-        while(cnt < num){
-            int id = static_cast<int>((static_cast<float> (qrand())/RAND_MAX)*(maxNumOfQuestions-1) + 1);
-            if(!query.exec(QString("SELECT * FROM '%1_%2' WHERE id = %3 AND Point LIKE '%4' AND Difficulty LIKE '%5'").arg(subjectName).arg(questionTypeName).arg(id).arg(point).arg(diff))){
-                failCnt ++;
-                //失败太多次
-                if (failCnt > 20) {
-                    QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
-                    return false;
-                }
-                continue;
-            }
+//        int cnt = 0;
+//        int failCnt = 0;
+//        while(cnt < num){
+//            int id = static_cast<int>((static_cast<float> (qrand())/RAND_MAX)*(maxNumOfQuestions-1) + 1);
+//            if(!query.exec(QString("SELECT * FROM '%1_%2' WHERE id = %3 AND Point LIKE '%4' AND Difficulty LIKE '%5'").arg(subjectName).arg(questionTypeName).arg(id).arg(point).arg(diff))){
+//                failCnt ++;
+//                //失败太多次
+//                if (failCnt > 20) {
+//                    QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
+//                    return false;
+//                }
+//                continue;
+//            }
 
-            query.next();
-            QString QuestionPath = query.value(3).toString();
-            if (QuestionPath.isEmpty()) {
-                failCnt ++;
-                //失败太多次
-                if (failCnt > 20) {
-                    QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
-                    return false;
-                }
-                continue;
-            }
-            QString AnswerPath = query.value(4).toString();
-            QString Point = query.value(5).toString();
-            QString Difficulty = query.value(6).toString();
-            QString Degrade = query.value(7).toString();
+//            query.next();
+//            QString QuestionPath = query.value(3).toString();
+//            if (QuestionPath.isEmpty()) {
+//                failCnt ++;
+//                //失败太多次
+//                if (failCnt > 20) {
+//                    QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
+//                    return false;
+//                }
+//                continue;
+//            }
+//            QString AnswerPath = query.value(4).toString();
+//            QString Point = query.value(5).toString();
+//            QString Difficulty = query.value(6).toString();
+//            QString Degrade = query.value(7).toString();
 
-            int maxIdx = questions.length();
-            bool gotSame = false;
-            //查找已有的题目列表中是否有同一个题目或其他限制要求
-            for (int i = 0; i < maxIdx; ++i) {
-                Question ques = questions.at(i);
-                //有重复的题目
-                if (ques.getSubjectName() == subjectName && ques.getQuestionType() == questionTypeName && ques.getId() == id) {
-                    gotSame = true;
-                    break;  // 退出for循环
-                }
-            }
+//            int maxIdx = questions.length();
+//            bool gotSame = false;
+//            //查找已有的题目列表中是否有同一个题目或其他限制要求
+//            for (int i = 0; i < maxIdx; ++i) {
+//                Question ques = questions.at(i);
+//                //有重复的题目
+//                if (ques.getSubjectName() == subjectName && ques.getQuestionType() == questionTypeName && ques.getId() == id) {
+//                    gotSame = true;
+//                    break;  // 退出for循环
+//                }
+//            }
 
-            if (gotSame) {
-                failCnt ++;
-                if (failCnt > 20) {
-                    QMessageBox::warning(this, tr("警告"), tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
-                    return false;
-                }
-                continue; //继续抽取题目
-            }else{     // 没有重复的题目
-                // 允许知识点重复的题目
-                if (tolerance[Point] != 0) {
-                    int PointCnt = tolerance[Point];
-                    PointCnt --;
-                    tolerance.remove(Point);
-                    tolerance.insert(Point, PointCnt);
-                    questions.append(Question(subjectName, id, questionTypeName, QuestionPath, AnswerPath, Point, Degrade, Difficulty));
-                    cnt ++;
-                    continue;  //继续抽取题目
-                }// end of 允许知识点重复的题目
-                else if(tolerance[Point] == 0){ //不允许知识点重复的抽题
-                    bool gotPointSame = false;
-                    for (int i = 0; i < maxIdx; ++i) {
-                        Question quest = questions.at(i);
-                        if (quest.getPoint() == Point) {//知识点有重复！
-                            gotPointSame = true;
-                            break; //退出for 循环
-                        }
+//            if (gotSame) {
+//                failCnt ++;
+//                if (failCnt > 20) {
+//                    QMessageBox::warning(this, tr("警告"), tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
+//                    return false;
+//                }
+//                continue; //继续抽取题目
+//            }else{     // 没有重复的题目
+//                // 允许知识点重复的题目
+//                if (tolerance[Point] != 0) {
+//                    int PointCnt = tolerance[Point];
+//                    PointCnt --;
+//                    tolerance.remove(Point);
+//                    tolerance.insert(Point, PointCnt);
+//                    questions.append(Question(subjectName, id, questionTypeName, QuestionPath, AnswerPath, Point, Degrade, Difficulty));
+//                    cnt ++;
+//                    continue;  //继续抽取题目
+//                }// end of 允许知识点重复的题目
+//                else if(tolerance[Point] == 0){ //不允许知识点重复的抽题
+//                    bool gotPointSame = false;
+//                    for (int i = 0; i < maxIdx; ++i) {
+//                        Question quest = questions.at(i);
+//                        if (quest.getPoint() == Point) {//知识点有重复！
+//                            gotPointSame = true;
+//                            break; //退出for 循环
+//                        }
 
-                    }
-                    if (gotPointSame) {
-                        failCnt ++;
-                        //失败太多次
-                        if (failCnt > 20) {
-                            QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
-                            return false;
-                        }
-                        continue; //继续抽取题目的循环
-                    }else{ // 没有同样知识点的题目
-                        questions.append(Question(subjectName, id, questionTypeName, QuestionPath, AnswerPath, Point, Degrade, Difficulty));
-                        cnt ++;
-                        continue;  //继续抽取题目
-                    }
-                } // end of 不允许知识点重复的抽题
-            } // end of 检测重复的题目
-        }  // 抽取题目的循环
-    }  // 某一行设置
+//                    }
+//                    if (gotPointSame) {
+//                        failCnt ++;
+//                        //失败太多次
+//                        if (failCnt > 20) {
+//                            QMessageBox::warning(this, tr("警告"),tr("无法满足您设定的条件，自动组卷失败!"), QMessageBox::Ok);
+//                            return false;
+//                        }
+//                        continue; //继续抽取题目的循环
+//                    }else{ // 没有同样知识点的题目
+//                        questions.append(Question(subjectName, id, questionTypeName, QuestionPath, AnswerPath, Point, Degrade, Difficulty));
+//                        cnt ++;
+//                        continue;  //继续抽取题目
+//                    }
+//                } // end of 不允许知识点重复的抽题
+//            } // end of 检测重复的题目
+//        }  // 抽取题目的循环
+//    }  // 某一行设置
 
-    QMessageBox::information(this, tr("通知"), tr(" 自动抽题完成！"), QMessageBox::Ok);
+//    QMessageBox::information(this, tr("通知"), tr(" 自动抽题完成！"), QMessageBox::Ok);
     return true;
 }
 
@@ -334,13 +334,13 @@ void newTestForm::on_questionTypeCB_currentIndexChanged(const QString &arg1)
     points = getPoints(subjectName, questionTypeName);
 
     ui->pointsCB->clear();
-    ui->pointsCB_2->clear();
+//    ui->pointsCB_2->clear();
     ui->pointsCB->addItem(tr("任意知识点"));
     ui->pointsCB->addItems(points);
     ui->pointsCB->setCurrentIndex(0);
-    ui->pointsCB_2->addItem(tr("任意知识点"));
-    ui->pointsCB_2->addItems(points);
-    ui->pointsCB_2->setCurrentIndex(0);
+//    ui->pointsCB_2->addItem(tr("任意知识点"));
+//    ui->pointsCB_2->addItems(points);
+//    ui->pointsCB_2->setCurrentIndex(0);
 }
 
 void newTestForm::on_chooseThisQuestion_clicked()
@@ -479,22 +479,22 @@ void newTestForm::on_deleteThisQuestion_clicked()
 
 void newTestForm::on_chooseMany_clicked()
 {
-    QString subjectName = ui->SubjectNameCB->currentText();
-    QString questionTypeName = ui->questionTypeCB->currentText();
-    QString point = ui->pointsCB_2->currentText();
-    QString difficulty = ui->difficultyCB_2->currentText();
-    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
-        QMessageBox::warning(this, tr("警告"), tr("请先建立课程和题型！"), QMessageBox::Ok);
-        return ;
-    }
-    if (ui->questNum->text() == "0") {
-        QMessageBox::warning(this, tr("警告"), tr("选择题目数量不能为0!"),QMessageBox::Ok);
-        return ;
-    }
-    QString itemtext(tr("%1:%2:%3:%4:%5题").arg(subjectName).arg(questionTypeName).arg(point).arg(difficulty).arg(ui->questNum->text()));
-    QListWidgetItem *item = new QListWidgetItem(itemtext);
-    tiaojians.append(itemtext);
-    ui->alreadySelected->addItem(item);
+//    QString subjectName = ui->SubjectNameCB->currentText();
+//    QString questionTypeName = ui->questionTypeCB->currentText();
+////    QString point = ui->pointsCB_2->currentText();
+////    QString difficulty = ui->difficultyCB_2->currentText();
+//    if (subjectName.isEmpty() || questionTypeName.isEmpty()) {
+//        QMessageBox::warning(this, tr("警告"), tr("请先建立课程和题型！"), QMessageBox::Ok);
+//        return ;
+//    }
+//    if (ui->questNum->text() == "0") {
+//        QMessageBox::warning(this, tr("警告"), tr("选择题目数量不能为0!"),QMessageBox::Ok);
+//        return ;
+//    }
+//    QString itemtext(tr("%1:%2:%3:%4:%5题").arg(subjectName).arg(questionTypeName).arg(point).arg(difficulty).arg(ui->questNum->text()));
+//    QListWidgetItem *item = new QListWidgetItem(itemtext);
+//    tiaojians.append(itemtext);
+//    ui->alreadySelected->addItem(item);
 }
 
 void newTestForm::on_tabWidget_currentChanged(QWidget *arg1)
@@ -529,7 +529,7 @@ void newTestForm::on_autoChooseQuestions_clicked()
 
 void newTestForm::on_clearButton_clicked()
 {
-    ui->alreadySelected->clear();
+//    ui->alreadySelected->clear();
     ui->alreadySelectQuestions->clear();
     ui->questionTextBrowser->clear();
     ui->questionTextBrowser_2->clear();
@@ -540,7 +540,7 @@ void newTestForm::on_clearButton_clicked()
 
 void newTestForm::on_clearAlreadySelection_clicked()
 {
-    ui->alreadySelected->clear();
+//    ui->alreadySelected->clear();
     questions.clear();
     ui->alreadySelectQuestions->clear();
     ui->questionTextBrowser->clear();
@@ -776,18 +776,18 @@ void newTestForm::on_saveQuestionButton_clicked()
 
 void newTestForm::on_deleteSelectedButton_clicked()
 {
-    QList<QListWidgetItem*> items = ui->alreadySelected->selectedItems();
-    if (items.length() == 0) {
-        QMessageBox::warning(this, tr("警告"), tr("请先选中要删除的条件！"), QMessageBox::Ok);
-        return ;
-    }
+//    QList<QListWidgetItem*> items = ui->alreadySelected->selectedItems();
+//    if (items.length() == 0) {
+//        QMessageBox::warning(this, tr("警告"), tr("请先选中要删除的条件！"), QMessageBox::Ok);
+//        return ;
+//    }
 
-    foreach (QListWidgetItem *item, items) {
-        tiaojians.removeOne(item->text());
-    }
-    ui->alreadySelected->clear();
-    foreach (QString tiao, tiaojians) {
-        QListWidgetItem *newItem = new QListWidgetItem(tiao);
-        ui->alreadySelected->addItem(newItem);
-    }
+//    foreach (QListWidgetItem *item, items) {
+//        tiaojians.removeOne(item->text());
+//    }
+//    ui->alreadySelected->clear();
+//    foreach (QString tiao, tiaojians) {
+//        QListWidgetItem *newItem = new QListWidgetItem(tiao);
+//        ui->alreadySelected->addItem(newItem);
+//    }
 }

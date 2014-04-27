@@ -20,6 +20,7 @@
 
 #include <QWizard>
 #include <QString>
+#include <QModelIndex>
 #include <QMap>
 class QComboBox;
 class QSpinBox;
@@ -55,9 +56,7 @@ public:
     void initializePage();
 
 private slots:
-    void onNumOfQuestionChanged(int value);
-    void onTableCellChanged(int curRow, int , int , int );
-    void onTableCellEnter(int curRow, int);
+    void onCellClicked(QModelIndex index);
 
     void onQuestionTypeChanged(QString questionType);
     void printValue(int);
@@ -65,17 +64,18 @@ private slots:
     void onAddClicked();
 
 private:
+    QLabel *typeLabel;
+    QLabel *numsLabel;
+    QLabel *degreeLabel;
+
     QComboBox *questionTypeComboBox;
     QSpinBox  *numOfQuestionSpinBox;
     QSpinBox  *degreeOfQuestionType;
-    QTableWidget *tableWidget;
+
     QStringList questionTypeList;
     QString questionType;
     QString subjectName;
 
-    QLabel *typeLabel;
-    QLabel *numsLabel;
-    QLabel *degreeLabel;
     QPushButton *addButton;
 };
 
@@ -89,11 +89,21 @@ public:
 
     QStringList getPoints(QString subjectName, QString questionTypeName);
 
+private slots:
+    void onPointsViewClicked(QModelIndex index);
+    void onQuestionTypeChanged(QString type);
+
 private:
     int TypeCount;
     int QuestionNumCount;
     QString subjectName;
     QString questionType;
+    QStringList questionTypeList;
+    QComboBox *questionTypeComboBox;
+
+    QPushButton *setButton;
+    QComboBox *numComboBox;
+    QComboBox *pointComboBox;
 };
 
 #endif // AUTONEWPAPER_H
