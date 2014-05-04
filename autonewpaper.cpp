@@ -25,6 +25,7 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QPushButton>
+#include <QMessageBox>
 
 #include <QSqlQuery>
 #include <QVariant>
@@ -46,6 +47,17 @@ AutoNewPaper::AutoNewPaper(QWidget *parent)
 
     setPixmap(QWizard::BackgroundPixmap, QPixmap("/images/background.png"));
     setWindowTitle(tr("自动生成新试卷向导"));
+
+    connect(this, SIGNAL(finished(int)), this, SLOT(onFinished(int)));
+}
+
+void AutoNewPaper::onFinished(int i)
+{
+    if (i) {
+        QMessageBox::information(this, tr("通知"), tr("完成%1").arg(i), QMessageBox::Ok);
+    } else {
+        QMessageBox::information(this, tr("通知"), tr("自动生成试卷已取消！"), QMessageBox::Ok);
+    }
 }
 
 SubjectSetup::SubjectSetup(QWidget *parent)
@@ -97,7 +109,7 @@ QuestionTypes::QuestionTypes(QWidget *parent)
 
 void QuestionTypes::initializePage()
 {
-    if (this->layout()){
+    if (this->layout()) {
         delete this->layout();
     }
 
@@ -115,6 +127,10 @@ void QuestionTypes::initializePage()
 
     while (query.next()) {
         questionTypeList.append(query.value(0).toString());
+    }
+
+    if (questionTypeList.length() == 0) {
+        QMessageBox::warning(this, tr("警告"), tr("您选择的科目尚没有建立题型，请先在“试题库管理”中新建题型"), QMessageBox::Ok);
     }
 
     QVBoxLayout *layout = new QVBoxLayout();
@@ -177,6 +193,7 @@ void QuestionTypes::initializePage()
     if (degreeOfQuestionType == NULL) {
         degreeOfQuestionType = new QSpinBox;
     }
+
     degreeOfQuestionType->setMinimum(0);
 
     if (addButton == NULL) {
@@ -225,13 +242,6 @@ void QuestionTypes::onQuestionTypeChanged(QString questionType)
     }
 }
 
-void QuestionTypes::printValue(int)
-{
-    foreach(QString type, questionTypeList) {
-        qDebug() << tr("%1_%2 value=").arg(subjectName).arg(questionType) << field(tr("%1_%2").arg(subjectName).arg(questionType)).toString();
-    }
-}
-
 void QuestionTypes::onAddClicked()
 {
     QString typeName = questionTypeComboBox->currentText();
@@ -256,6 +266,13 @@ PointSetup::PointSetup(QWidget *parent)
     numComboBox = NULL;
     pointComboBox = NULL;
     setButton = NULL;
+    pointsModel = NULL;
+    pointsView = NULL;
+    degreeSpinBox = NULL;
+
+    numLabel = NULL;
+    degreeLabel = NULL;
+    pointLabel = NULL;
 }
 
 void PointSetup::initializePage()
@@ -273,7 +290,8 @@ void PointSetup::initializePage()
     if (questionTypeComboBox == NULL) {
         questionTypeComboBox = new QComboBox;
     } else {
-        questionTypeComboBox->clear();
+        delete questionTypeComboBox;
+        questionTypeComboBox = new QComboBox;
     }
 
     QSqlQuery query;
@@ -284,41 +302,56 @@ void PointSetup::initializePage()
         questionTypeComboBox->addItem(query.value(0).toString());
     }
 
+    if (questionTypeComboBox->count() == 0) {
+        return ;
+    }
+
     questionTypeComboBox->setCurrentIndex(0);
 
-    connect(questionTypeComboBox, SIGNAL(currentIndexChanged(QString)), this, SLOT(onQuestionTypeChanged(QString)));
+    connect(questionTypeComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(onQuestionTypeChanged(int)));
 
     questionType = questionTypeComboBox->currentText();
 
-    pointsModel = new QStandardItemModel(tableModel->item(0,1)->text().toInt(), 3);
+    if (pointsModel == NULL) {
+        pointsModel = new QStandardItemModel(tableModel->item(0,1)->text().toInt(), 3);
+    } else {
+        pointsModel->clear();
+    }
 
     pointsModel->setHorizontalHeaderLabels(QStringList() << tr("题号") << tr("知识点") << tr("分数"));
 
-    for (int row = 0; row < tableModel->item(0,1)->text().toInt(); ++row) {
+    for (int row = 0; row < tableModel->item(questionTypeComboBox->currentIndex() ,1)->text().toInt(); ++row) {
         pointsModel->setItem(row, 0, new QStandardItem(QString("%1").arg(row+1)));
         pointsModel->setItem(row, 1, new QStandardItem(tr("任意知识点")));
         pointsModel->setItem(row, 2, new QStandardItem(tr("根据总分值计算")));
     }
 
-    QTableView *pointsView = new QTableView;
+    if (pointsView == NULL) {
+        pointsView = new QTableView;
+    }
 
     pointsView->setModel(pointsModel);
 
     connect(pointsView, SIGNAL(clicked(QModelIndex)), this, SLOT(onPointsViewClicked(QModelIndex)));
 
-    QLabel *numLabel = new QLabel(tr("题号:"));
+    if (numLabel == NULL) {
+        numLabel = new QLabel(tr("题号:"));
+    }
 
     if (numComboBox == NULL) {
         numComboBox = new QComboBox;
     } else {
-        numComboBox->clear();
+        delete numComboBox;
+        numComboBox = new QComboBox;
     }
 
     for (int row = 0; row < tableModel->item(0,1)->text().toInt(); ++row) {
         numComboBox->addItem(QString("%1").arg(row+1));
     }
 
-    QLabel *pointLabel = new QLabel(tr("知识点"));
+    if (pointLabel == NULL) {
+        pointLabel = new QLabel(tr("知识点"));
+    }
 
     if (pointComboBox == NULL) {
         pointComboBox = new QComboBox;
@@ -333,15 +366,23 @@ void PointSetup::initializePage()
         pointComboBox->addItem(point);
     }
 
-    QLabel *degreeLabel = new QLabel(tr("分数"));
+    if (degreeLabel == NULL)
+        degreeLabel = new QLabel(tr("分数"));
 
-    QSpinBox *degreeSpinBox = new QSpinBox;
+    if (degreeSpinBox == NULL) {
+        degreeSpinBox = new QSpinBox;
+    } else {
+        degreeSpinBox->setValue(0);
+    }
+
 
     degreeSpinBox->setMinimum(0);
 
     if (setButton == NULL) {
         setButton = new QPushButton(tr("设置该题"));
     }
+
+    connect(setButton, SIGNAL(clicked()), this, SLOT(onSetButtonClicked()));
 
     QHBoxLayout *hLayout = new QHBoxLayout;
 
@@ -355,14 +396,18 @@ void PointSetup::initializePage()
 
     QVBoxLayout *layout = new QVBoxLayout;
 
-    layout->addWidget(questionTypeComboBox);
+    QLabel *questionTypeLabel = new QLabel(tr("题目类型:"));
+    QHBoxLayout *typeLayout = new QHBoxLayout;
+    typeLayout->addWidget(questionTypeLabel);
+    typeLayout->addWidget(questionTypeComboBox);
+
+    layout->addLayout(typeLayout);
 
     layout->addWidget(pointsView);
 
     layout->addLayout(hLayout);
 
     setLayout(layout);
-
 }
 
 QStringList PointSetup::getPoints(QString subjectName, QString questionTypeName)
@@ -388,10 +433,57 @@ void PointSetup::onPointsViewClicked(QModelIndex index)
 
     numComboBox->setCurrentIndex(row);
 
-    //    pointComboBox->setCurrentIndex();
+    for (int i = 0; i < pointComboBox->count(); ++i) {
+        if (pointComboBox->itemText(i) == pointsModel->item(row, 1)->text()) {
+            pointComboBox->setCurrentIndex(i);
+            break;
+        }
+
+        if (i == pointComboBox->count() -1) {
+            pointComboBox->setCurrentIndex(0);
+        }
+    }
+
+    if (pointsModel->item(row, 2)->text().toInt()) {
+        degreeSpinBox->setValue(pointsModel->item(row, 2)->text().toInt());
+    }
 }
 
 void PointSetup::onQuestionTypeChanged(QString type)
 {
+    pointsModel->clear();
 
+    QSqlQuery query;
+
+}
+
+void PointSetup::onQuestionTypeChanged(int index)
+{
+    pointsModel->clear();
+
+    for (int row = 0; row < tableModel->item(index ,1)->text().toInt(); ++row) {
+        pointsModel->setItem(row, 0, new QStandardItem(QString("%1").arg(row+1)));
+        pointsModel->setItem(row, 1, new QStandardItem(tr("任意知识点")));
+        pointsModel->setItem(row, 2, new QStandardItem(tr("根据总分值计算")));
+    }
+
+    pointsView->setModel(pointsModel);
+
+    connect(pointsView, SIGNAL(clicked(QModelIndex)), this, SLOT(onPointsViewClicked(QModelIndex)));
+
+}
+
+void PointSetup::onSetButtonClicked()
+{
+    int row = numComboBox->currentText().toInt() - 1;
+
+    QString point = pointComboBox->currentText();
+
+    pointsModel->setItem(row, 1, new QStandardItem(point));
+
+    int degree = degreeSpinBox->value();
+
+    if (degree != 0) {
+        pointsModel->setItem(row, 2, new QStandardItem(QString("%1").arg(degree)));
+    }
 }

@@ -118,12 +118,12 @@ bool DocReadWriter::readAndConvert()
     answerdoc->dynamicCall("SaveAs(const QString&)", answerDocPath);
     answerdoc->dynamicCall("Close(boolean)", true);
 
-    QAxObject *degradeBookmarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("分数"));
-    if (!degradeBookmarks) {
-        return false;
-    }
-    int degradeBookmarksStart = degradeBookmarks->querySubObject("Range")->property("Start").toInt();
-    int degradeBookmarksEnd = degradeBookmarks->querySubObject("Range")->property("End").toInt();
+//    QAxObject *degradeBookmarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("分数"));
+//    if (!degradeBookmarks) {
+//        return false;
+//    }
+//    int degradeBookmarksStart = degradeBookmarks->querySubObject("Range")->property("Start").toInt();
+//    int degradeBookmarksEnd = degradeBookmarks->querySubObject("Range")->property("End").toInt();
 
     //获取“难度”书签
     QAxObject *difficultyBookemarks = inputFile->querySubObject("Bookmarks(QVariant)", QObject::tr("难度"));
@@ -141,11 +141,11 @@ bool DocReadWriter::readAndConvert()
     }
     int endBookmarksStart = endBookmarks->querySubObject("Range")->property("Start").toInt();
 
-    docRange->dynamicCall("setRange(QVariant, QVariant)", pointBookmarksEnd, degradeBookmarksStart);
+    docRange->dynamicCall("setRange(QVariant, QVariant)", pointBookmarksEnd, difficultyBookemarksStart);
     point = docRange->property("Text").toString().trimmed();
 
-    docRange->dynamicCall("setRange(QVariant, QVariant)", degradeBookmarksEnd, difficultyBookemarksStart);
-    degrade = docRange->property("Text").toString().trimmed();
+//    docRange->dynamicCall("setRange(QVariant, QVariant)", degradeBookmarksEnd, difficultyBookemarksStart);
+//    degrade = docRange->property("Text").toString().trimmed();
 
     docRange->dynamicCall("setRange(QVariant, QVariant)", difficultyBookemarksEnd, endBookmarksStart);
 
@@ -183,10 +183,10 @@ QString DocReadWriter::getPoint()
     return point;
 }
 
-QString DocReadWriter::getDegrade()
-{
-    return degrade;
-}
+//QString DocReadWriter::getDegrade()
+//{
+//    return degrade;
+//}
 
 QString DocReadWriter::getDifficulty()
 {

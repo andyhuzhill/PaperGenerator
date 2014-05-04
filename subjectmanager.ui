@@ -73,7 +73,7 @@
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">font: 75 14pt &quot;楷体&quot;;</string>
+    <string notr="true">font: 75 20pt &quot;楷体&quot;;</string>
    </property>
    <property name="text">
     <string>返回主界面</string>

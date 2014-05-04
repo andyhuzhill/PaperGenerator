@@ -22,6 +22,7 @@
 #include <QString>
 #include <QModelIndex>
 #include <QMap>
+class QTableView;
 class QComboBox;
 class QSpinBox;
 class QTableWidget;
@@ -34,6 +35,9 @@ class AutoNewPaper : public QWizard
 public:
     AutoNewPaper(QWidget *parent = 0);
 
+private slots:
+
+    void onFinished(int i);
 };
 
 
@@ -59,7 +63,6 @@ private slots:
     void onCellClicked(QModelIndex index);
 
     void onQuestionTypeChanged(QString questionType);
-    void printValue(int);
 
     void onAddClicked();
 
@@ -92,6 +95,9 @@ public:
 private slots:
     void onPointsViewClicked(QModelIndex index);
     void onQuestionTypeChanged(QString type);
+    void onQuestionTypeChanged(int index);
+
+    void onSetButtonClicked();
 
 private:
     int TypeCount;
@@ -100,6 +106,11 @@ private:
     QString questionType;
     QStringList questionTypeList;
     QComboBox *questionTypeComboBox;
+    QTableView * pointsView;
+    QSpinBox *degreeSpinBox;
+    QLabel *numLabel;
+    QLabel *degreeLabel;
+    QLabel *pointLabel;
 
     QPushButton *setButton;
     QComboBox *numComboBox;

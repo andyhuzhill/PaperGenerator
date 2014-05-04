@@ -14,6 +14,7 @@
 
 #include "defs.h"
 #include "docreadwriter.h"
+#include "autonewpaper.h"
 
 newTestForm::newTestForm(QWidget *parent) :
     QWidget(parent),
@@ -46,12 +47,9 @@ newTestForm::newTestForm(QWidget *parent) :
     }
     ui->difficultyCB->addItems(difficulties);
     ui->difficultyCB->setCurrentIndex(0);
-//    ui->difficultyCB_2->addItems(difficulties);
-//    ui->difficultyCB_2->setCurrentIndex(0);
 
     connect(ui->pointsCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
     connect(ui->difficultyCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
-//    connect(ui->difficultyCB_2, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
     connect(ui->SubjectNameCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
     connect(ui->questionTypeCB, SIGNAL(activated(int)), this, SLOT(questionNumRefresh()));
 }
@@ -383,7 +381,6 @@ void newTestForm::questionNumRefresh()
     if (subjectName.isEmpty() || questionTypeName.isEmpty() ) {
         ui->questionTextBrowser->clear();
         ui->answerTextBrowser->clear();
-        ui->degradeEdit->clear();
         ui->difficultyEdit->clear();
         ui->pointEdit->clear();
         return ;
@@ -693,7 +690,6 @@ void newTestForm::on_questionNumListWidget_itemClicked(QListWidgetItem *item)
         ui->answerTextBrowser->clear();
         ui->answerTextBrowser_2->clear();
         ui->pointEdit->clear();
-        ui->degradeEdit->clear();
         ui->difficultyEdit->clear();
         return ;
     }
@@ -713,7 +709,6 @@ void newTestForm::on_questionNumListWidget_itemClicked(QListWidgetItem *item)
     ui->questionTextBrowser->insertHtml(Question);
     ui->answerTextBrowser->clear();
     ui->answerTextBrowser->insertHtml(Answer);
-    ui->degradeEdit->setText(Degrade);
     ui->pointEdit->setText(Point);
     ui->difficultyEdit->setText(Difficulty);
 }
@@ -732,7 +727,6 @@ void newTestForm::on_questionNumListWidget_currentRowChanged(int currentRow)
         QMessageBox::warning(this, tr("警告"), tr("请先新建课程与题目类型！"), QMessageBox::Ok);
         ui->questionTextBrowser->clear();
         ui->answerTextBrowser->clear();
-        ui->degradeEdit->clear();
         ui->difficultyEdit->clear();
         ui->pointEdit->clear();
         return ;
@@ -753,7 +747,6 @@ void newTestForm::on_questionNumListWidget_currentRowChanged(int currentRow)
     ui->questionTextBrowser->insertHtml(Question);
     ui->answerTextBrowser->clear();
     ui->answerTextBrowser->insertHtml(Answer);
-    ui->degradeEdit->setText(Degrade);
     ui->pointEdit->setText(Point);
     ui->difficultyEdit->setText(Difficulty);
 }
@@ -774,20 +767,10 @@ void newTestForm::on_saveQuestionButton_clicked()
     savePaper(paperName);
 }
 
-void newTestForm::on_deleteSelectedButton_clicked()
-{
-//    QList<QListWidgetItem*> items = ui->alreadySelected->selectedItems();
-//    if (items.length() == 0) {
-//        QMessageBox::warning(this, tr("警告"), tr("请先选中要删除的条件！"), QMessageBox::Ok);
-//        return ;
-//    }
 
-//    foreach (QListWidgetItem *item, items) {
-//        tiaojians.removeOne(item->text());
-//    }
-//    ui->alreadySelected->clear();
-//    foreach (QString tiao, tiaojians) {
-//        QListWidgetItem *newItem = new QListWidgetItem(tiao);
-//        ui->alreadySelected->addItem(newItem);
-//    }
+
+void newTestForm::on_pushButton_clicked()
+{
+    AutoNewPaper *paper = new AutoNewPaper(this);
+    paper->exec();
 }

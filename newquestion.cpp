@@ -318,8 +318,7 @@ void NewQuestion::on_inputButton_clicked()
                                     "'%6',"         //QuestionDocPath
                                     "'%7',"         //AnswerDocPath
                                     "'%8',"         //Point
-                                    "'%9',"         //Difficulty
-                                    "'%10')"        //degrade
+                                    "'%9')"         //Difficulty
                                     )
             .arg(subjectName)
             .arg(questionTypeName)
@@ -329,8 +328,7 @@ void NewQuestion::on_inputButton_clicked()
             .arg(questionFilePath)
             .arg(answerFilePath)
             .arg(point)
-            .arg(diff)
-            .arg("0");
+            .arg(diff);
 
     bool status = query.exec(insertInfoCmd);
     if (status) {
@@ -439,8 +437,6 @@ void NewQuestion::on_inputOne_clicked()
 
     QString difficulty = docread->getDifficulty();
 
-    QString degrade = docread->getDegrade();
-
 
     QString insertInfoCmd = QString("INSERT INTO '%1_%2' VALUES("
                                     "%3,"           //id
@@ -449,8 +445,7 @@ void NewQuestion::on_inputOne_clicked()
                                     "'%6',"         //QuestionDocPath
                                     "'%7',"         //AnswerDocPath
                                     "'%8',"         //Point
-                                    "'%9',"         //Difficulty
-                                    "'%10')"        //degrade
+                                    "'%9')"         //Difficulty
                                     )
             .arg(subjectName)
             .arg(questionTypeName)
@@ -460,8 +455,7 @@ void NewQuestion::on_inputOne_clicked()
             .arg(questionPath)
             .arg(answerPath)
             .arg(point)
-            .arg(difficulty)
-            .arg(degrade);
+            .arg(difficulty);
 
     bool status = query.exec(insertInfoCmd);
     if (status) {
@@ -586,7 +580,6 @@ void NewQuestion::on_inputMany_clicked()
 
             QString difficulty = docread->getDifficulty();
 
-            QString degrade = docread->getDegrade();
 
             numOfQuestions++;
 
@@ -597,8 +590,7 @@ void NewQuestion::on_inputMany_clicked()
                                             "'%6',"         //QuestionDocPath
                                             "'%7',"         //AnswerDocPath
                                             "'%8',"         //Point
-                                            "'%9',"         //Difficulty
-                                            "'%10')"        //degrade
+                                            "'%9')"         //Difficulty
                                             )
                     .arg(subjectName)
                     .arg(questionTypeName)
@@ -608,8 +600,7 @@ void NewQuestion::on_inputMany_clicked()
                     .arg(questionPath)
                     .arg(answerPath)
                     .arg(point)
-                    .arg(difficulty)
-                    .arg(degrade);
+                    .arg(difficulty);
 
             if(!query.exec(insertInfoCmd)){
                 QMessageBox::warning(this, tr("警告"), tr("录入文件\"%1\"时，发生错误！一般是书签信息提取失败。").arg(file), QMessageBox::Ok);

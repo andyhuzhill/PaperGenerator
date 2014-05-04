@@ -38,7 +38,7 @@ public:
     QString getAnswer();
     QString getAnswerDocPath();
     QString getPoint();
-    QString getDegrade();
+//    QString getDegrade();
     QString getDifficulty();
 
     void parserImage(QString &html, QString type);
@@ -59,7 +59,7 @@ private:
     QString answerHTML;     //答案
     QString answerDocPath;  //答案文件路径
     QString point;          //知识点
-    QString degrade;        //分数
+//    QString degrade;        //分数
     QString difficulty;     //难度 （1～ 10）
 };
 

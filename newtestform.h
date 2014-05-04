@@ -82,7 +82,7 @@ private slots:
 
     void on_saveQuestionButton_clicked();
 
-    void on_deleteSelectedButton_clicked();
+    void on_pushButton_clicked();
 
 private:
     Ui::newTestForm *ui;

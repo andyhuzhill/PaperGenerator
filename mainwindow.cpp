@@ -301,11 +301,3 @@ void MainWindow::onCheckUpdate()
 
 }
 
-
-
-
-void MainWindow::on_pushButton_clicked()
-{
-    AutoNewPaper *paper = new AutoNewPaper(this);
-    paper->exec();
-}

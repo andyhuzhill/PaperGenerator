@@ -95,7 +95,7 @@ void NewSubject::on_newSubjectButton_clicked()
                                ).arg(i+1).arg(subjectName);
     bool createSubjectResult = query.exec(createSubjectCmd);
     bool insertSubjectResult = query.exec(insertSubjectCmd);
-    qDebug() << "creaet:" << createSubjectResult ;
+    qDebug() << "create:" << createSubjectResult ;
     qDebug() << "insert:" << insertSubjectResult;
 
     if (createSubjectResult && insertSubjectResult) {
@@ -166,8 +166,7 @@ void NewSubject::on_newTypeButton_clicked()
                                          "QuestionDocPath,"
                                          "AnswerDocPath,"
                                          "Point,"
-                                         "Difficulty,"
-                                         "degrade)").arg(subjectName).arg(questionType);
+                                         "Difficulty)").arg(subjectName).arg(questionType);
 
     bool insertQusTypeResult = query.exec(insertQuestionTypeCmd);
     bool insertQusTypeIntoTableResult = query.exec(insertQuestionTypeTableCmd);
