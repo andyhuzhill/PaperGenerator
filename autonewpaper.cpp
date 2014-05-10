@@ -26,6 +26,8 @@
 #include <QTableWidgetItem>
 #include <QPushButton>
 #include <QMessageBox>
+#include <QList>
+#include <QDateTime>
 
 #include <QSqlQuery>
 #include <QVariant>
@@ -35,7 +37,10 @@
 #include <QStandardItemModel>
 #include <QHeaderView>
 
+#include "newtestform.h"
+
 static QStandardItemModel *tableModel = NULL;
+static QList<QStandardItemModel *> *pointModelList = NULL;
 static QStandardItemModel *pointsModel = NULL;
 
 AutoNewPaper::AutoNewPaper(QWidget *parent)
@@ -49,15 +54,181 @@ AutoNewPaper::AutoNewPaper(QWidget *parent)
     setWindowTitle(tr("自动生成新试卷向导"));
 
     connect(this, SIGNAL(finished(int)), this, SLOT(onFinished(int)));
+
 }
 
-void AutoNewPaper::onFinished(int i)
+void AutoNewPaper::generatePaper()
 {
-    if (i) {
-        QMessageBox::information(this, tr("通知"), tr("完成%1").arg(i), QMessageBox::Ok);
+    QString subjectName = field("subjectName").toString();
+
+    QList<Question> result;
+
+    qDebug() << tableModel->rowCount();
+
+    for (int row = 0; row < tableModel->rowCount(); ++row) {
+        pointsModel = pointModelList->at(row);
+
+        if (pointsModel->rowCount() == 0) {
+            continue ;
+        }
+
+        QList<Question> eachResult = getQuestionList(subjectName, tableModel->item(row, 0)->text(), tableModel->item(row, 1)->text().toInt());
+
+        if (eachResult.isEmpty()) {
+            break;
+        }
+
+        result.append(eachResult);
+    }
+
+    newTestForm *parentForm = static_cast<newTestForm*> (this->parent());
+
+    parentForm->setQuestionList(result);
+
+    if (!result.isEmpty()) {
+        QMessageBox::information(this, tr("通知"), tr("完成!"), QMessageBox::Ok);
+    }
+}
+
+QList<Question> AutoNewPaper::getQuestionList(QString subjectName, QString questionTypeName, int num)
+{
+    QList<Question> result;
+    int cnt= 0;
+    QSqlQuery query;
+    int failedCnt = 0;
+
+    query.exec(QString("SELECT numOfQuestions FROM '%1' WHERE questionTypes == '%2'").arg(subjectName).arg(questionTypeName));
+    query.next();
+
+    for (int i = 0; i < query.ValuesAsRows; ++i) {
+        qDebug() << query.value(i).toString();
+    }
+
+    int maxNumOfQuestions = query.value(0).toInt();
+
+    if (num > maxNumOfQuestions) {
+        QMessageBox::warning(this, tr("警告"), tr("科目《%1》题型“%2”没有 %3 道题目！").arg(subjectName).arg(questionTypeName).arg(num), QMessageBox::Ok);
+
+        return  result;
+    }
+
+    int pointsCnt = getPointsCnt(subjectName, questionTypeName);
+    if (num > pointsCnt) {
+        QMessageBox::warning(this, tr("警告"), tr("%1 题型只有 %2 种 知识点，题目数量超过了知识点数量，无法保证知识点不重复，组卷失败！").arg(questionTypeName).arg(pointsCnt), QMessageBox::Ok);
+
+        return result;
+    }
+
+    do {
+        int id = static_cast<int>((static_cast<float> (qrand())/RAND_MAX) *(maxNumOfQuestions-1) + 1);
+
+        QString point = (pointsModel->item(cnt, 1)->text() == tr("任意知识点")) ? "%" : pointsModel->item(cnt, 1)->text();
+
+        QString difficulty = (pointsModel->item(cnt, 2)->text() == tr("任意难度")) ? "%" : pointsModel->item(cnt, 2)->text();
+
+        if (!query.exec(QString("SELECT * FROM '%1_%2' WHERE id = %3 AND Point LIKE '%4' AND Difficulty LIKE '%5'").arg(subjectName).arg(questionTypeName).arg(id).arg(point).arg(difficulty))) {
+            qDebug() << tr("搜索数据库失败!");
+            failedCnt ++;
+            continue ;
+        }
+
+        query.next();
+
+        QString questionDocPath = query.value(3).toString();
+
+        if (questionDocPath.isEmpty()) {
+            qDebug() << subjectName;
+            qDebug() << questionTypeName;
+            qDebug() << id;
+            qDebug() << point;
+            qDebug() << difficulty;
+            qDebug() << tr("该试题为空! 已被删除！");
+            failedCnt ++;
+            continue ;
+        }
+
+        QString answerDocPath = query.value(4).toString();
+        QString queryPoint = query.value(5).toString();
+        QString queryDifficulty = query.value(6).toString();
+        QString grade = pointsModel->item(cnt, 3)->text() == tr("根据总分值计算") ? commonDegree[questionTypeName].toString() : pointsModel->item(cnt, 3)->text();
+
+
+        if (pointsMap.contains(queryPoint)) {
+            qDebug() << tr("已经有该知识点的题目了");
+            failedCnt ++;
+            continue ;
+        }
+
+        pointsMap[queryPoint] = true;
+
+        Question question(subjectName, id, questionTypeName, questionDocPath, answerDocPath, queryPoint, queryDifficulty, grade.toInt());
+        result.append(question);
+        cnt ++;
+    } while (cnt < num && failedCnt < 80);
+
+    if (failedCnt >= 80) {
+        QMessageBox::warning(this, tr("警告"), tr("自动组卷失败！请重新修改您设定的组卷条件！"), QMessageBox::Ok);
+        result.clear();
+    }
+
+    return result;
+}
+
+void AutoNewPaper::getCommonDegree()
+{
+    qDebug() << "pointsModleList Length = " << pointModelList->length();
+    qDebug() << "tableModel rowCount = " << tableModel->rowCount();
+
+    for (int tabRow = 0; tabRow < tableModel->rowCount(); ++tabRow) {
+        int totalDegree = tableModel->item(tabRow, 2)->text().toInt();
+        int totalQuestCount = tableModel->item(tabRow, 1)->text().toInt();
+
+        if (totalQuestCount == 0) {
+            continue;
+        }
+
+        pointsModel = pointModelList->at(tabRow);
+
+        int setCount = 0;
+        int setDegreeSum = 0;
+        for (int pointRow = 0; pointRow < totalQuestCount; ++pointRow) {
+            if (pointsModel->item(pointRow, 3)->text() != tr("根据总分值计算")) {
+                setCount ++;
+                setDegreeSum += pointsModel->item(pointRow, 3)->text().toInt();
+            }
+        }
+
+        commonDegree[tableModel->item(tabRow,0)->text()] = (totalDegree - setDegreeSum) / (totalQuestCount - setCount);
+    }
+}
+
+void AutoNewPaper::onFinished(int iFinishFlag)
+{
+    if (iFinishFlag) {
+
+        getCommonDegree();
+
+        generatePaper();
+
     } else {
         QMessageBox::information(this, tr("通知"), tr("自动生成试卷已取消！"), QMessageBox::Ok);
     }
+}
+
+int AutoNewPaper::getPointsCnt(QString subjectName, QString questionTypeName)
+{
+    QStringList Points;
+    QSqlQuery query;
+    query.exec(QString("SELECT Point FROM '%1_%2'").arg(subjectName).arg(questionTypeName));
+    Points.clear();
+    while (query.next()) {
+        QString point  = query.value(0).toString();
+        if (Points.contains(point) || point == "") {
+            continue;
+        }
+        Points.append(point);
+    }
+    return Points.length();
 }
 
 SubjectSetup::SubjectSetup(QWidget *parent)
@@ -140,12 +311,17 @@ void QuestionTypes::initializePage()
     tableModel->setHorizontalHeaderLabels(QStringList() << tr("题目类型") << tr("题目数量") << tr("题型总分"));
 
     int row = 0;
+    if (pointModelList == NULL) {
+        pointModelList = new QList<QStandardItemModel*>;
+    }
+    pointModelList->clear();
     foreach (QString type, questionTypeList) {
         tableModel->setItem(row, 0, new QStandardItem(type));
         tableModel->item(row, 0)->setEditable(false);
         tableModel->setItem(row, 1, new QStandardItem("0"));
         tableModel->setItem(row, 2, new QStandardItem("0"));
-
+        QStandardItemModel *pointModel = new QStandardItemModel;
+        pointModelList->append(pointModel);
         row++;
     }
 
@@ -259,12 +435,13 @@ void QuestionTypes::onAddClicked()
 PointSetup::PointSetup(QWidget *parent)
     : QWizardPage(parent)
 {
-    TypeCount = 0;
-    QuestionNumCount = 0;
+    typeCount = 0;
+    questionNumCount = 0;
     questionTypeList.clear();
     questionTypeComboBox  = NULL;
     numComboBox = NULL;
     pointComboBox = NULL;
+    diffComboBox = NULL;
     setButton = NULL;
     pointsModel = NULL;
     pointsView = NULL;
@@ -273,6 +450,7 @@ PointSetup::PointSetup(QWidget *parent)
     numLabel = NULL;
     degreeLabel = NULL;
     pointLabel = NULL;
+    diffLabel = NULL;
 }
 
 void PointSetup::initializePage()
@@ -312,18 +490,18 @@ void PointSetup::initializePage()
 
     questionType = questionTypeComboBox->currentText();
 
-    if (pointsModel == NULL) {
-        pointsModel = new QStandardItemModel(tableModel->item(0,1)->text().toInt(), 3);
-    } else {
+    for (int row = 0; row < tableModel->rowCount(); row++) {
+        pointsModel = pointModelList->at(row);
         pointsModel->clear();
-    }
 
-    pointsModel->setHorizontalHeaderLabels(QStringList() << tr("题号") << tr("知识点") << tr("分数"));
+        pointsModel->setHorizontalHeaderLabels(QStringList() << tr("题号") << tr("知识点") << tr("难度")  << tr("分数"));
 
-    for (int row = 0; row < tableModel->item(questionTypeComboBox->currentIndex() ,1)->text().toInt(); ++row) {
-        pointsModel->setItem(row, 0, new QStandardItem(QString("%1").arg(row+1)));
-        pointsModel->setItem(row, 1, new QStandardItem(tr("任意知识点")));
-        pointsModel->setItem(row, 2, new QStandardItem(tr("根据总分值计算")));
+        for (int row = 0; row < tableModel->item(questionTypeComboBox->currentIndex() ,1)->text().toInt(); ++row) {
+            pointsModel->setItem(row, 0, new QStandardItem(QString("%1").arg(row+1)));
+            pointsModel->setItem(row, 1, new QStandardItem(tr("任意知识点")));
+            pointsModel->setItem(row, 2, new QStandardItem(tr("任意难度")));
+            pointsModel->setItem(row, 3, new QStandardItem(tr("根据总分值计算")));
+        }
     }
 
     if (pointsView == NULL) {
@@ -359,6 +537,17 @@ void PointSetup::initializePage()
         pointComboBox->clear();
     }
 
+    if (diffLabel == NULL) {
+        diffLabel = new QLabel(tr("难度"));
+    }
+
+    if (diffComboBox == NULL) {
+        diffComboBox = new QComboBox;
+        QStringList diffList;
+        diffList  << tr("任意难度") << "0" << "1" << "2" << "3" << "4" << "5" << "6" << "7" << "8" << "9" << "10";
+        diffComboBox->addItems(diffList);
+    }
+
     QStringList points = getPoints(subjectName, questionType);
 
     pointComboBox->addItem(tr("任意知识点"));
@@ -390,6 +579,8 @@ void PointSetup::initializePage()
     hLayout->addWidget(numComboBox);
     hLayout->addWidget(pointLabel);
     hLayout->addWidget(pointComboBox);
+    hLayout->addWidget(diffLabel);
+    hLayout->addWidget(diffComboBox);
     hLayout->addWidget(degreeLabel);
     hLayout->addWidget(degreeSpinBox);
     hLayout->addWidget(setButton);
@@ -422,7 +613,6 @@ QStringList PointSetup::getPoints(QString subjectName, QString questionTypeName)
             continue;
         }
         Points.append(point);
-        qDebug() << point;
     }
     return Points;
 }
@@ -444,33 +634,47 @@ void PointSetup::onPointsViewClicked(QModelIndex index)
         }
     }
 
-    if (pointsModel->item(row, 2)->text().toInt()) {
-        degreeSpinBox->setValue(pointsModel->item(row, 2)->text().toInt());
+    for (int i = 0; i < diffComboBox->count(); ++i) {
+        if (diffComboBox->itemText(i) == pointsModel->item(row, 2)->text()) {
+            diffComboBox->setCurrentIndex(i);
+            break;
+        }
+
+        if (i == diffComboBox->count() - 1 ) {
+            diffComboBox->setCurrentIndex(0);
+        }
     }
-}
 
-void PointSetup::onQuestionTypeChanged(QString type)
-{
-    pointsModel->clear();
-
-    QSqlQuery query;
-
+    if (pointsModel->item(row, 3)->text().toInt()) {
+        degreeSpinBox->setValue(pointsModel->item(row, 3)->text().toInt());
+    }
 }
 
 void PointSetup::onQuestionTypeChanged(int index)
 {
-    pointsModel->clear();
+    pointsModel = pointModelList->at(index);
 
-    for (int row = 0; row < tableModel->item(index ,1)->text().toInt(); ++row) {
-        pointsModel->setItem(row, 0, new QStandardItem(QString("%1").arg(row+1)));
-        pointsModel->setItem(row, 1, new QStandardItem(tr("任意知识点")));
-        pointsModel->setItem(row, 2, new QStandardItem(tr("根据总分值计算")));
+    pointsModel->setHorizontalHeaderLabels(QStringList() << tr("题号") << tr("知识点") << tr("分数"));
+
+    if (pointsModel->rowCount() != tableModel->item(index, 1)->text().toInt()) {
+        pointsModel->clear();
+        for (int row = 0; row < tableModel->item(index ,1)->text().toInt(); ++row) {
+            pointsModel->setItem(row, 0, new QStandardItem(QString("%1").arg(row+1)));
+            pointsModel->setItem(row, 1, new QStandardItem(tr("任意知识点")));
+            pointsModel->setItem(row, 2, new QStandardItem(tr("任意难度")));
+            pointsModel->setItem(row, 3, new QStandardItem(tr("根据总分值计算")));
+        }
     }
 
     pointsView->setModel(pointsModel);
 
     connect(pointsView, SIGNAL(clicked(QModelIndex)), this, SLOT(onPointsViewClicked(QModelIndex)));
 
+    numComboBox->clear();
+
+    for (int i = 0; i < tableModel->item(index, 1)->text().toInt(); ++i) {
+        numComboBox->addItem(QString("%1").arg(i+1));
+    }
 }
 
 void PointSetup::onSetButtonClicked()
@@ -481,9 +685,13 @@ void PointSetup::onSetButtonClicked()
 
     pointsModel->setItem(row, 1, new QStandardItem(point));
 
+    QString diff = diffComboBox->currentText();
+
+    pointsModel->setItem(row, 2, new QStandardItem(diff));
+
     int degree = degreeSpinBox->value();
 
     if (degree != 0) {
-        pointsModel->setItem(row, 2, new QStandardItem(QString("%1").arg(degree)));
+        pointsModel->setItem(row, 3, new QStandardItem(QString("%1").arg(degree)));
     }
 }

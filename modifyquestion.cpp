@@ -442,6 +442,7 @@ void ModifyQuestion::subjectListRefresh()
     while (query.next()) {
         ui->subjectCombox->addItem(query.value(0).toString());
     }
+
 }
 
 void ModifyQuestion::on_questionNumberCombox_valueChanged(int arg1)
@@ -476,4 +477,15 @@ void ModifyQuestion::on_questionNumberCombox_valueChanged(int arg1)
     ui->answerBrowser->insertHtml(Answer);
     ui->pointEdit->setText(Point);
     ui->diffSP->setValue(Difficulty);
+}
+
+
+void ModifyQuestion::on_questionTypeCombox_currentIndexChanged(int index)
+{
+    on_questionNumberCombox_valueChanged(index);
+}
+
+void ModifyQuestion::on_subjectCombox_currentIndexChanged(int index)
+{
+    on_questionNumberCombox_valueChanged(index);
 }

@@ -72,6 +72,10 @@ private slots:
 
     void on_questionNumberCombox_valueChanged(int arg1);
 
+    void on_questionTypeCombox_currentIndexChanged(int index);
+
+    void on_subjectCombox_currentIndexChanged(int index);
+
 private:
     Ui::ModifyQuestion *ui;
 

@@ -1,15 +1,15 @@
 #include "question.h"
 
-Question::Question(QString subject, int id,QString QuestionType, QString QuestionPath, QString AnswerPath, QString Point, QString Degrade, QString Difficulty)
+Question::Question(QString subject, int id, QString QuestionType, QString QuestionPath, QString AnswerPath, QString Point, QString Difficulty, int grade)
 {
     subjectName = subject;
     prvid = id;
     questionType = QuestionType;
     point = Point;
-    degrade = Degrade;
     difficulty = Difficulty;
     questionDocPath = QuestionPath;
     answerDocPath = AnswerPath;
+    this->grade = grade;
 }
 
 QString Question::getSubjectName()
@@ -17,37 +17,73 @@ QString Question::getSubjectName()
     return subjectName;
 }
 
-int Question::getId()
+int Question::getGrade() const
 {
-    return prvid;
+    return grade;
 }
 
-QString Question::getQuestionType()
+void Question::setDegree(int value)
 {
-    return questionType;
+    grade = value;
 }
-
-QString Question::getPoint()
-{
-    return point;
-}
-
-QString Question::getDegrade()
-{
-    return degrade;
-}
-
-QString Question::getDifficulty()
+QString Question::getDifficulty() const
 {
     return difficulty;
 }
 
-QString Question::getQuestionPath()
+void Question::setDifficulty(const QString &value)
+{
+    difficulty = value;
+}
+int Question::getPrvid() const
+{
+    return prvid;
+}
+
+void Question::setPrvid(int value)
+{
+    prvid = value;
+}
+QString Question::getPoint() const
+{
+    return point;
+}
+
+void Question::setPoint(const QString &value)
+{
+    point = value;
+}
+QString Question::getQuestionType() const
+{
+    return questionType;
+}
+
+void Question::setQuestionType(const QString &value)
+{
+    questionType = value;
+}
+QString Question::getQuestionDocPath() const
 {
     return questionDocPath;
 }
 
-QString Question::getAnswerPath()
+void Question::setQuestionDocPath(const QString &value)
+{
+    questionDocPath = value;
+}
+QString Question::getAnswerDocPath() const
 {
     return answerDocPath;
 }
+
+void Question::setAnswerDocPath(const QString &value)
+{
+    answerDocPath = value;
+}
+
+
+
+
+
+
+

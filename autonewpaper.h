@@ -22,6 +22,10 @@
 #include <QString>
 #include <QModelIndex>
 #include <QMap>
+#include <QVariantMap>
+#include <QList>
+#include <question.h>
+
 class QTableView;
 class QComboBox;
 class QSpinBox;
@@ -35,9 +39,21 @@ class AutoNewPaper : public QWizard
 public:
     AutoNewPaper(QWidget *parent = 0);
 
+    void generatePaper();
+    QList<Question> getQuestionList(QString subjectName, QString questionTypeName, int num);
+
+    void getCommonDegree();
+
 private slots:
 
     void onFinished(int i);
+
+private:
+    QVariantMap pointsMap;
+    QVariantMap questionNumMap;
+    QVariantMap commonDegree;
+
+    int getPointsCnt(QString subjectName, QString questionTypeName);
 };
 
 
@@ -92,16 +108,17 @@ public:
 
     QStringList getPoints(QString subjectName, QString questionTypeName);
 
+    bool generatePaper();
+
 private slots:
     void onPointsViewClicked(QModelIndex index);
-    void onQuestionTypeChanged(QString type);
     void onQuestionTypeChanged(int index);
 
     void onSetButtonClicked();
 
 private:
-    int TypeCount;
-    int QuestionNumCount;
+    int typeCount;
+    int questionNumCount;
     QString subjectName;
     QString questionType;
     QStringList questionTypeList;
@@ -111,10 +128,13 @@ private:
     QLabel *numLabel;
     QLabel *degreeLabel;
     QLabel *pointLabel;
+    QLabel *diffLabel;
 
     QPushButton *setButton;
     QComboBox *numComboBox;
     QComboBox *pointComboBox;
+    QComboBox *diffComboBox;
+
 };
 
 #endif // AUTONEWPAPER_H

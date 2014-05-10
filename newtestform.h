@@ -14,17 +14,6 @@ namespace Ui {
 class newTestForm;
 }
 
-//typedef struct _Question{
-//    int prvid;
-//    QString subjectName;
-//    QString questionType;
-//    QString point;
-//    QString degrade;
-//    QString difficulty;
-//    QString questionDocPath;
-//    QString answerDocPath;
-//}Question;
-
 class newTestForm : public QWidget
 {
     Q_OBJECT
@@ -40,8 +29,13 @@ public:
     bool savePaper(QString paperName);
 
     bool autoChoose();
+
     bool checkSubjectQuestionType();
+
     QStringList getPoints(QString subjectName, QString questionTypeName);
+
+    void setQuestionList(QList<Question> listOfQuestion);
+
 signals:
     void contentChanged();
 
@@ -62,13 +56,7 @@ private slots:
 
     void on_deleteThisQuestion_clicked();
 
-    void on_chooseMany_clicked();
-
     void on_tabWidget_currentChanged(QWidget *arg1);
-
-    void on_autoChooseQuestions_clicked();
-
-    void on_clearButton_clicked();
 
     void on_clearAlreadySelection_clicked();
 
@@ -82,7 +70,7 @@ private slots:
 
     void on_saveQuestionButton_clicked();
 
-    void on_pushButton_clicked();
+    void on_autoChooseButton_clicked();
 
 private:
     Ui::newTestForm *ui;

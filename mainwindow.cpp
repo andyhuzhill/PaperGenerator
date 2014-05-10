@@ -292,11 +292,18 @@ void MainWindow::onCheckUpdate()
 
     int Min   = Version.split(".").at(2).toInt();
 
-    if ((curMajor < Major)
-            ||(curMinor < Minor)
-            ||(curMin  < Min)
-            ){
+    if (curMajor < Major) {
         showUpdate(Version.remove("\n"));
+    } else if (curMajor > Major) {
+        return ;
+    } else if (curMinor < Minor){
+        showUpdate(Version.remove("\n"));
+    } else if (curMinor > Minor) {
+        return ;
+    }else if (curMin < Min) {
+        showUpdate(Version.remove("\n"));
+    } else {
+        return ;
     }
 
 }

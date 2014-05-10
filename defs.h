@@ -19,7 +19,7 @@ const QString wordAppName="Word.Application";
 
 /*** 定义当前软件版本 */
 const int curMajor = 1;
-const int curMinor = 6;
-const int curMin   = 5;
+const int curMinor = 7;
+const int curMin   = 1;
 
 #endif // DEFS_H

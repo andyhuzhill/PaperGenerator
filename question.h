@@ -6,21 +6,36 @@
 class Question
 {
 public:
-    Question(QString subject , int id , QString QuestionType, QString QuestionPath, QString AnswerPath, QString Point, QString Degrade, QString Difficulty);
+    Question(QString subject , int id , QString QuestionType, QString QuestionPath, QString AnswerPath, QString Point, QString Difficulty, int grade);
     QString getSubjectName();
-    int getId();
-    QString getQuestionType();
-    QString getPoint();
-    QString getDegrade();
-    QString getDifficulty();
-    QString getQuestionPath();
-    QString getAnswerPath();
+
+    int getPrvid() const;
+    void setPrvid(int value);
+
+    int getGrade() const;
+    void setDegree(int value);
+
+    QString getDifficulty() const;
+    void setDifficulty(const QString &value);
+
+    QString getPoint() const;
+    void setPoint(const QString &value);
+
+    QString getQuestionType() const;
+    void setQuestionType(const QString &value);
+
+    QString getQuestionDocPath() const;
+    void setQuestionDocPath(const QString &value);
+
+    QString getAnswerDocPath() const;
+    void setAnswerDocPath(const QString &value);
+
 private:
     int prvid;
     QString subjectName;
     QString questionType;
     QString point;
-    QString degrade;
+    int grade;
     QString difficulty;
     QString questionDocPath;
     QString answerDocPath;
