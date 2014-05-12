@@ -258,10 +258,11 @@ void NewSubject::on_deleteSelectedType_clicked()
         QSqlQuery query;
 
         foreach (QListWidgetItem *item, selectedQuestionTypes) {
-            bool deleteQuestionTypeResult = query.exec(QString("DELETE FROM '%1' where questionTypes = '%2'").arg( subjectName ).arg(item->text()));
-            bool dropTableResult = query.exec(QString("DROP TABLE '%1_%2'").arg(subjectName).arg(item->text()));
+            qDebug() << item->text();
+            bool deleteQuestionTypeResult = query.exec(tr("DELETE FROM '%1' where questionTypes = '%2'").arg(subjectName ).arg(item->text()));
+            bool dropTableResult = query.exec(tr("DROP TABLE '%1_%2'").arg(subjectName).arg(item->text()));
 
-            if (!deleteQuestionTypeResult && !dropTableResult) {
+             if (!deleteQuestionTypeResult && !dropTableResult) {
                 QMessageBox::warning(this, tr("警告"), tr("题目类型删除失败！"),QMessageBox::Ok);
                 questionTypeListRefresh(subjectName);
                 return ;

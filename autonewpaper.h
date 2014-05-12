@@ -116,6 +116,8 @@ private slots:
 
     void onSetButtonClicked();
 
+    void appPointModelList(int index);
+
 private:
     int typeCount;
     int questionNumCount;

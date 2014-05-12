@@ -40,7 +40,7 @@
 #include "newtestform.h"
 
 static QStandardItemModel *tableModel = NULL;
-static QList<QStandardItemModel *> *pointModelList = NULL;
+static QList<QStandardItemModel *> pointModelList;
 static QStandardItemModel *pointsModel = NULL;
 
 AutoNewPaper::AutoNewPaper(QWidget *parent)
@@ -66,7 +66,7 @@ void AutoNewPaper::generatePaper()
     qDebug() << tableModel->rowCount();
 
     for (int row = 0; row < tableModel->rowCount(); ++row) {
-        pointsModel = pointModelList->at(row);
+        pointsModel = pointModelList.at(row);
 
         if (pointsModel->rowCount() == 0) {
             continue ;
@@ -176,22 +176,25 @@ QList<Question> AutoNewPaper::getQuestionList(QString subjectName, QString quest
 
 void AutoNewPaper::getCommonDegree()
 {
-    qDebug() << "pointsModleList Length = " << pointModelList->length();
+    qDebug() << "pointsModleList Length = " << pointModelList.length();
     qDebug() << "tableModel rowCount = " << tableModel->rowCount();
 
     for (int tabRow = 0; tabRow < tableModel->rowCount(); ++tabRow) {
-        int totalDegree = tableModel->item(tabRow, 2)->text().toInt();
-        int totalQuestCount = tableModel->item(tabRow, 1)->text().toInt();
+        int totalDegree = tableModel->item(tabRow, 2)->text().trimmed().toInt();
+        int totalQuestCount = tableModel->item(tabRow, 1)->text().trimmed().toInt();
+
+        qDebug() << "totalQuestionCount:" << totalQuestCount;
 
         if (totalQuestCount == 0) {
             continue;
         }
 
-        pointsModel = pointModelList->at(tabRow);
+        pointsModel = pointModelList.at(tabRow);
 
         int setCount = 0;
         int setDegreeSum = 0;
         for (int pointRow = 0; pointRow < totalQuestCount; ++pointRow) {
+            qDebug() << pointRow;
             if (pointsModel->item(pointRow, 3)->text() != tr("根据总分值计算")) {
                 setCount ++;
                 setDegreeSum += pointsModel->item(pointRow, 3)->text().toInt();
@@ -311,17 +314,14 @@ void QuestionTypes::initializePage()
     tableModel->setHorizontalHeaderLabels(QStringList() << tr("题目类型") << tr("题目数量") << tr("题型总分"));
 
     int row = 0;
-    if (pointModelList == NULL) {
-        pointModelList = new QList<QStandardItemModel*>;
-    }
-    pointModelList->clear();
+
+    pointModelList.clear();
+
     foreach (QString type, questionTypeList) {
         tableModel->setItem(row, 0, new QStandardItem(type));
         tableModel->item(row, 0)->setEditable(false);
         tableModel->setItem(row, 1, new QStandardItem("0"));
         tableModel->setItem(row, 2, new QStandardItem("0"));
-        QStandardItemModel *pointModel = new QStandardItemModel;
-        pointModelList->append(pointModel);
         row++;
     }
 
@@ -491,22 +491,14 @@ void PointSetup::initializePage()
     questionType = questionTypeComboBox->currentText();
 
     for (int row = 0; row < tableModel->rowCount(); row++) {
-        pointsModel = pointModelList->at(row);
-        pointsModel->clear();
-
-        pointsModel->setHorizontalHeaderLabels(QStringList() << tr("题号") << tr("知识点") << tr("难度")  << tr("分数"));
-
-        for (int row = 0; row < tableModel->item(questionTypeComboBox->currentIndex() ,1)->text().toInt(); ++row) {
-            pointsModel->setItem(row, 0, new QStandardItem(QString("%1").arg(row+1)));
-            pointsModel->setItem(row, 1, new QStandardItem(tr("任意知识点")));
-            pointsModel->setItem(row, 2, new QStandardItem(tr("任意难度")));
-            pointsModel->setItem(row, 3, new QStandardItem(tr("根据总分值计算")));
-        }
+       appPointModelList(row);
     }
 
     if (pointsView == NULL) {
         pointsView = new QTableView;
     }
+
+    pointsModel = pointModelList.at(0);
 
     pointsView->setModel(pointsModel);
 
@@ -563,7 +555,6 @@ void PointSetup::initializePage()
     } else {
         degreeSpinBox->setValue(0);
     }
-
 
     degreeSpinBox->setMinimum(0);
 
@@ -652,7 +643,7 @@ void PointSetup::onPointsViewClicked(QModelIndex index)
 
 void PointSetup::onQuestionTypeChanged(int index)
 {
-    pointsModel = pointModelList->at(index);
+    pointsModel = pointModelList.at(index);
 
     pointsModel->setHorizontalHeaderLabels(QStringList() << tr("题号") << tr("知识点") << tr("分数"));
 
@@ -694,4 +685,22 @@ void PointSetup::onSetButtonClicked()
     if (degree != 0) {
         pointsModel->setItem(row, 3, new QStandardItem(QString("%1").arg(degree)));
     }
+}
+
+void PointSetup::appPointModelList(int index)
+{
+    QStandardItemModel *pointModel = new QStandardItemModel;
+    pointModel->setHorizontalHeaderLabels(QStringList() << tr("题号") << tr("知识点") << tr("分数"));
+
+
+    pointModel->clear();
+    for (int row = 0; row < tableModel->item(index ,1)->text().toInt(); ++row) {
+        pointModel->setItem(row, 0, new QStandardItem(QString("%1").arg(row+1)));
+        pointModel->setItem(row, 1, new QStandardItem(tr("任意知识点")));
+        pointModel->setItem(row, 2, new QStandardItem(tr("任意难度")));
+        pointModel->setItem(row, 3, new QStandardItem(tr("根据总分值计算")));
+    }
+
+    pointModelList.append(pointModel);
+
 }

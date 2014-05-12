@@ -28,13 +28,13 @@ public:
 
     bool savePaper(QString paperName);
 
-    bool autoChoose();
-
     bool checkSubjectQuestionType();
 
     QStringList getPoints(QString subjectName, QString questionTypeName);
 
     void setQuestionList(QList<Question> listOfQuestion);
+
+    int getTotalGradeOfQuestionType(QString questionType);
 
 signals:
     void contentChanged();
@@ -77,7 +77,6 @@ private:
     QAxWidget *word;
     QList<Question> questions;
     QStringList points;
-    QStringList tiaojians;
 };
 
 #endif // NEWTESTFORM_H

@@ -194,7 +194,7 @@ void NewQuestion::on_inputButton_clicked()
     QFile answerFile("TheAnswer.doc");
 
     if (!(questionFile.exists() && answerFile.exists())) {
-        QMessageBox::information(this, tr("信息"), tr("请先点击“录入题目“和“录入答案“"),QMessageBox::Ok);
+        QMessageBox::information(this, tr("信息"), tr("请先点击“输入题目“和“输入答案“"),QMessageBox::Ok);
         return ;
     }
 
@@ -238,7 +238,7 @@ void NewQuestion::on_inputButton_clicked()
     docs->dynamicCall("Open(QString)", QString("%1/OneQuestion.doc").arg(currentDir.currentPath()));
     active_doc = word->querySubObject("ActiveDocument");
     if (!active_doc) {
-        QMessageBox::warning(this, tr("警告"), tr("无法获得文档<OneQuestion.doc>！"), QMessageBox::Ok);
+        QMessageBox::warning(this, tr("警告"), tr("无法获得文档<OneQuestion.doc>！请检查本软件是否安装正确，或者重新安装本软件。"), QMessageBox::Ok);
         word->dynamicCall("Quit(Boolean)", true);
         delete word;
         return;
@@ -273,7 +273,7 @@ void NewQuestion::on_inputButton_clicked()
     docs->dynamicCall("Open(QString)", QString("%1/TheAnswer.doc").arg(currentDir.currentPath()));
     active_doc = word->querySubObject("ActiveDocument");
     if (!active_doc) {
-        QMessageBox::warning(this, tr("警告"), tr("无法获得文档<TheAnswer.doc>！"), QMessageBox::Ok);
+        QMessageBox::warning(this, tr("警告"), tr("无法获得文档<TheAnswer.doc>！请检查本软件是否安装正确，或者重新安装本软件。"), QMessageBox::Ok);
         word->dynamicCall("Quit(Boolean)", true);
         delete word;
         return;

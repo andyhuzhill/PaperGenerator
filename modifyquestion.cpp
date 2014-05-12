@@ -483,9 +483,11 @@ void ModifyQuestion::on_questionNumberCombox_valueChanged(int arg1)
 void ModifyQuestion::on_questionTypeCombox_currentIndexChanged(int index)
 {
     on_questionNumberCombox_valueChanged(index);
+    questionNumRefresh();
 }
 
 void ModifyQuestion::on_subjectCombox_currentIndexChanged(int index)
 {
     on_questionNumberCombox_valueChanged(index);
+    questionNumRefresh();
 }
