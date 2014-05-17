@@ -383,7 +383,12 @@ void NewQuestion::on_inputOne_clicked()
         QMessageBox::warning(this, tr("警告"), tr("未发现在您的电脑上安装有Microsoft Word 程序， 请您先安装word以使用本程序！"), QMessageBox::Ok);
         return ;
     }
-    word->setProperty("Visible", false);    //隐藏word程序
+#ifdef DEBUG
+    word->setProperty("Visible", true);    //隐藏word程序
+#else
+    word->setProperty("Visible", false);
+#endif
+
     word->setProperty("DisplayAlerts", true);
 
     QAxObject *docs = word->querySubObject("Documents");
@@ -628,7 +633,6 @@ void NewQuestion::on_inputMany_clicked()
     QMessageBox::information(this, tr("信息"),tr("批量录入文件完成，共录入了 %1 道题目").arg(quescnt), QMessageBox::Ok);
 
     emit dataChanged();
-
 }
 
 void NewQuestion::onDataChanged()

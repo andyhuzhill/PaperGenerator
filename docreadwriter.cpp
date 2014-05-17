@@ -46,6 +46,7 @@ bool DocReadWriter::readAndConvert()
     if (!answerBookmarks) {
         return false;
     }
+
     int answerBookmarksStart = answerBookmarks->querySubObject("Range")->property("Start").toInt();
     int answerBookmarksEnd = answerBookmarks->querySubObject("Range")->property("End").toInt();
 

@@ -28,6 +28,7 @@
 #include <QClipboard>
 #include <QAxWidget>
 #include <QMimeData>
+#include <QDebug>
 
 ModifyQuestion::ModifyQuestion(QWidget *parent) :
     QWidget(parent),
@@ -91,7 +92,7 @@ void ModifyQuestion::extractImage(QString &html, QString QorA, QString outPath)
         int srcEnd = html.indexOf("\"",srcStart);
         srcEnd = html.indexOf("\"", srcEnd);
 
-        QString imgOriginalPath = html.mid(srcStart,srcEnd-srcStart);
+        QString imgOriginalPath = html.mid(srcStart,srcEnd - srcStart);
 
         QFile imgfile(imgOriginalPath);
         QFileInfo imgFileInfo(imgOriginalPath);
@@ -473,6 +474,7 @@ void ModifyQuestion::on_questionNumberCombox_valueChanged(int arg1)
 
     ui->questionBrowser->clear();
     ui->questionBrowser->insertHtml(Question);
+    qDebug() << Question;
     ui->answerBrowser->clear();
     ui->answerBrowser->insertHtml(Answer);
     ui->pointEdit->setText(Point);
