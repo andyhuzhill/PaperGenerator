@@ -54,7 +54,7 @@ p, li { white-space: pre-wrap; }
     </font>
    </property>
    <property name="text">
-    <string>&lt;h2&gt; 长沙理工大学 电气与信息工程学院</string>
+    <string>&lt;h2&gt; XXXX 学院</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
